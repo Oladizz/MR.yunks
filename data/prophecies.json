@@ -1,0 +1,26 @@
+{
+  "positive": [
+    "The spirits favor your next step.",
+    "A great fortune is coming your way.",
+    "Your path is clear, walk it with confidence.",
+    "The stars align in your favor."
+  ],
+  "neutral": [
+    "The shadows whisper, but not all is revealed.",
+    "A choice will present itself soon. Choose wisely.",
+    "The path ahead is shrouded in mist.",
+    "The spirits are watching you, but their intentions are unclear."
+  ],
+  "negative": [
+    "Beware the moon’s next shadow.",
+    "A challenge will test your strength.",
+    "Doubt will be your greatest enemy.",
+    "An obstacle lies in your path."
+  ],
+  "meme": [
+    "The High Spirits laugh at your question.",
+    "The shadow watches you carefully.",
+    "The spirits are currently AFK, try again later.",
+    "The prophecy is... 42."
+  ]
+}

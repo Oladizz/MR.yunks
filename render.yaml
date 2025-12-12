@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: mr-yunks-bot
+    env: node
+    plan: free # Ensure you are on a plan that supports web services
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: ADMIN_TELEGRAM_ID
+        sync: false
+      - key: RENDER_URL
+        fromService:
+          type: web
+          name: mr-yunks-bot
+          property: url
+      - key: NODE_ENV
+        value: production
