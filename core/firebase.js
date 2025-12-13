@@ -2,6 +2,7 @@ const admin = require('firebase-admin');
 
 try {
   let serviceAccount;
+  console.log('FIREBASE_CREDENTIALS:', process.env.FIREBASE_CREDENTIALS ? 'Set' : 'Not Set');
   if (process.env.FIREBASE_CREDENTIALS) {
     serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
   } else {
