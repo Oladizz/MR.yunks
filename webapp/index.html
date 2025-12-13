@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Settings</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Mr. Yunks Bot Settings</h1>
+    <div id="settings-form">
+        <div class="form-group">
+            <label for="welcome-message">Welcome Message</label>
+            <textarea id="welcome-message" rows="5" placeholder="e.g., Welcome, {username}! Your name is {initiate_name}."></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>Banned Words</label>
+            <div id="banned-words-list"></div>
+            <div class="banned-word-add">
+                <input type="text" id="new-banned-word" placeholder="Add a word">
+                <button id="add-word-btn">Add</button>
+            </div>
+        </div>
+
+        <button id="save-btn">Save Settings</button>
+    </div>
+    
+    <script src="main.js"></script>
+</body>
+</html>
