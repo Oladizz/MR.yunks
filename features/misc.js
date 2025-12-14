@@ -1,7 +1,7 @@
 const sharp = require('sharp');
 const { db } = require('../core/firebase');
 const { initiatedNames } = require('../data');
-const { updateUserInDb } = require('../core/users');
+const { updateUserInDb, awardXp } = require('../core/users');
 const { isUserAdmin } = require('./moderation');
 const { sendRateLimitedMessage } = require('../core/telegramUtils');
 const { parseDuration } = require('./moderation');
@@ -20,22 +20,54 @@ function registerMiscHandlers(bot) {
      */
     bot.onText(/\/help/, async (msg) => {
         const chatId = msg.chat.id;
+        const userId = msg.from.id;
         const chatType = msg.chat.type;
+        const isAdmin = await isUserAdmin(bot, chatId, userId);
 
-        const generalCommandsHelp = `
+        let helpMessage = `
 *Mr. Yunks Bot Features*
 
 *General Commands:*
 - \`/start\`: Start interacting with the bot.
 - \`/help\`: Shows this help message.
 - \`/prophecy <question>\`: Get a prophecy.
-- \`/js\`: Join a Shadow Game.
-- \`/s @username\`: Tag a user in a Shadow Game.
-- \`/join_clash\` or \`/join\`: Join a Cult Clash game.
+- \`/leaderboard [number]\`: Display the top XP earners (e.g., /leaderboard 5 to show top 5).
 - Send a photo to convert it to a sticker.
 `;
+        
+        const inlineKeyboard = [];
+        if (isAdmin || chatType === 'private') { // Only show admin/protectron buttons to admins or in private chat
+            inlineKeyboard.push([{ text: 'Admin Commands', callback_data: 'help_admin' }]);
+            inlineKeyboard.push([{ text: 'Protectron Commands', callback_data: 'help_protectron' }]);
+        }
+        inlineKeyboard.push([{ text: 'Game Commands', callback_data: 'help_games' }]);
 
-        const adminCommandsHelp = `
+
+        const opts = {
+            parse_mode: 'Markdown',
+            reply_markup: {
+                inline_keyboard: inlineKeyboard
+            }
+        };
+
+        bot.sendMessage(chatId, helpMessage, opts);
+    });
+
+    bot.on('callback_query', async (callbackQuery) => {
+        const msg = callbackQuery.message;
+        const chatId = msg.chat.id;
+        const userId = callbackQuery.from.id;
+        const data = callbackQuery.data;
+        const isAdmin = await isUserAdmin(bot, chatId, userId);
+
+        let responseText = "";
+
+        if (data === 'help_admin') {
+            if (!isAdmin && msg.chat.type !== 'private') {
+                bot.answerCallbackQuery(callbackQuery.id, { text: "You are not authorized to view admin commands." });
+                return;
+            }
+            responseText = `
 *Admin Commands:*
 - \`/tagall [message]\`: Silently tags all known members in the chat.
 - \`/announce <message>\`: Post an announcement.
@@ -56,9 +88,14 @@ function registerMiscHandlers(bot) {
 - \`/warnings @username\`: Check a user's warnings.
 - \`/add_user_to_db <user_id>\`: Manually add a user to the database for tagging purposes.
 - \`/countdown <duration> [message]\`: Start a countdown (e.g., 5m, 1h, 2d).
+- \`/awardxp @username <amount>\`: Award XP to a user.
 `;
-
-        const protectronCommandsHelp = `
+        } else if (data === 'help_protectron') {
+            if (!isAdmin && msg.chat.type !== 'private') {
+                bot.answerCallbackQuery(callbackQuery.id, { text: "You are not authorized to view Protectron commands." });
+                return;
+            }
+            responseText = `
 *Protectron Commands (Admin Only):*
 - \`/status\`: Display current Protectron settings.
 - \`/antispam\`: Toggle anti-spam filter.
@@ -83,16 +120,57 @@ function registerMiscHandlers(bot) {
 - \`/whitelist_remove <domain>\`: Remove a domain from whitelist.
 - \`/whitelist_clear\`: Clear the whitelist.
 `;
-
-        let finalHelpMessage = "";
-
-        if (chatType === 'private') {
-            finalHelpMessage = generalCommandsHelp + adminCommandsHelp + protectronCommandsHelp;
-        } else {
-            finalHelpMessage = generalCommandsHelp + "\n*For more options, including Admin and Protectron commands, please send /help in a private chat with me.*";
+        } else if (data === 'help_games') {
+            responseText = `
+*Game Commands:*
+- \`/js\`: Join a Shadow Game (initiates a new game setup if none is active).
+- \`/s @username\`: Tag a user in a Shadow Game (when you are "IT").
+- \`/cultclash\`: Start a Cult Clash game (Admin only).
+- \`/join_clash\` or \`/join\`: Join a Cult Clash game.
+`;
         }
-        
-        bot.sendMessage(chatId, finalHelpMessage, { parse_mode: 'Markdown' });
+
+        if (responseText) {
+            bot.editMessageText(responseText, {
+                chat_id: chatId,
+                message_id: msg.message_id,
+                parse_mode: 'Markdown',
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: 'Back to Help Categories', callback_data: 'help_main' }]
+                    ]
+                }
+            });
+        } else if (data === 'help_main') {
+            // Re-send the main help message with buttons
+            const reHelpMessage = `
+*Mr. Yunks Bot Features*
+
+*General Commands:*
+- \`/start\`: Start interacting with the bot.
+- \`/help\`: Shows this help message.
+- \`/prophecy <question>\`: Get a prophecy.
+- \`/leaderboard [number]\`: Display the top XP earners (e.g., /leaderboard 5 to show top 5).
+- Send a photo to convert it to a sticker.
+`;
+            const reInlineKeyboard = [];
+            if (isAdmin || msg.chat.type === 'private') {
+                reInlineKeyboard.push([{ text: 'Admin Commands', callback_data: 'help_admin' }]);
+                reInlineKeyboard.push([{ text: 'Protectron Commands', callback_data: 'help_protectron' }]);
+            }
+            reInlineKeyboard.push([{ text: 'Game Commands', callback_data: 'help_games' }]);
+            
+            bot.editMessageText(reHelpMessage, {
+                chat_id: chatId,
+                message_id: msg.message_id,
+                parse_mode: 'Markdown',
+                reply_markup: {
+                    inline_keyboard: reInlineKeyboard
+                }
+            });
+        }
+
+        bot.answerCallbackQuery(callbackQuery.id);
     });
 
     /**
@@ -254,6 +332,7 @@ function registerMiscHandlers(bot) {
       
         const chatId = msg.chat.id;
         const userId = msg.from.id;
+        await awardXp(userId, 1); // Award 1 XP for each message
         const username = msg.from.username || `${msg.from.first_name} ${msg.from.last_name || ''}`.trim();
         const today = new Date().toISOString().slice(0, 10);
 

@@ -11,9 +11,9 @@ function startElimination(chatId, bot) {
             const winnerIds = players;
             const winners = winnerIds.map(id => `@${game.players[id]}`).join(', ');
             
-            winnerIds.forEach(id => addPoints(id, 100));
+            winnerIds.forEach(id => addPoints(id, 20));
 
-            bot.sendMessage(chatId, `🏆 The Cult Clash is over! The winners are: ${winners}. Each has been awarded 100 Yunk points!`);
+            bot.sendMessage(chatId, `🏆 The Cult Clash is over! The winners are: ${winners}. Each has been awarded 20 Yunk points!`);
             delete cultClashGames[chatId];
             return;
         }

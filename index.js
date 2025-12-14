@@ -11,6 +11,7 @@ const { registerModerationHandlers } = require('./features/moderation');
 const { registerConfigHandlers, saveWebAppConfig } = require('./features/config');
 const { setupProtectronHandlers } = require('./features/protectron');
 const { registerTagAllHandlers } = require('./features/tagall');
+const registerLeaderboardHandlers = require('./features/leaderboard');
 const { startCountdownCheck } = require('./core/countdownManager');
 
 const adminId = process.env.ADMIN_TELEGRAM_ID;
@@ -33,6 +34,7 @@ registerModerationHandlers(bot);
 registerConfigHandlers(bot);
 setupProtectronHandlers(bot, adminId);
 registerTagAllHandlers(bot);
+registerLeaderboardHandlers(bot);
 
 startCountdownCheck(bot);
 

@@ -1,4 +1,5 @@
 const { db } = require('../core/firebase');
+const { getUserByUsername, awardXp } = require('../core/users');
 
 function registerAdminHandlers(bot) {
     /**
@@ -66,6 +67,41 @@ function registerAdminHandlers(bot) {
         } catch (error) {
             console.error("Error announcing top active members:", error);
             bot.sendMessage(chatId, "An error occurred while fetching the leaderboard.");
+        }
+    });
+
+    /**
+     * Admin command to award XP to a user.
+     */
+    bot.onText(/\/awardxp @(\S+) (\d+)/, async (msg, match) => {
+        const chatId = msg.chat.id;
+        const callerId = msg.from.id;
+        const targetUsername = match[1];
+        const xpAmount = parseInt(match[2], 10);
+
+        if (callerId.toString() !== process.env.ADMIN_TELEGRAM_ID) {
+            bot.sendMessage(chatId, "You are not authorized to use this command.");
+            return;
+        }
+
+        if (isNaN(xpAmount) || xpAmount <= 0) {
+            bot.sendMessage(chatId, "Please provide a valid positive number for XP amount.");
+            return;
+        }
+
+        try {
+            const targetUser = await getUserByUsername(targetUsername);
+
+            if (!targetUser) {
+                bot.sendMessage(chatId, `User @${targetUsername} not found.`);
+                return;
+            }
+
+            await awardXp(targetUser.id, xpAmount);
+            bot.sendMessage(chatId, `Awarded ${xpAmount} XP to @${targetUsername}.`);
+        } catch (error) {
+            console.error("Error awarding XP:", error);
+            bot.sendMessage(chatId, "An error occurred while trying to award XP.");
         }
     });
 }

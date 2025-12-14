@@ -391,5 +391,6 @@ function registerModerationHandlers(bot) {
 
 module.exports = {
     registerModerationHandlers,
-    isUserAdmin
+    isUserAdmin,
+    parseDuration
 };

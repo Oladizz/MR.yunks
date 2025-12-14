@@ -1,4 +1,4 @@
-const { getUserByUsername } = require('../core/users');
+const { getUserByUsername, awardXp } = require('../core/users');
 const shadowGames = {};
 
 // Function to update and manage the status panel
@@ -243,6 +243,7 @@ Tap to enter…
             }
             
             game.players[userId] = { username, isIt: false };
+            await awardXp(userId, 5); // Award XP for joining
             bot.sendMessage(chatId, `👤 @${username} entered the shadows…`);
             updateStatusPanel(chatId, bot);
             bot.answerCallbackQuery(callbackQuery.id);
