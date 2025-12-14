@@ -11,6 +11,7 @@ const { registerModerationHandlers } = require('./features/moderation');
 const { registerConfigHandlers, saveWebAppConfig } = require('./features/config');
 const { setupProtectronHandlers } = require('./features/protectron');
 const { registerTagAllHandlers } = require('./features/tagall');
+const { startCountdownCheck } = require('./core/countdownManager');
 
 const adminId = process.env.ADMIN_TELEGRAM_ID;
 
@@ -33,16 +34,6 @@ registerConfigHandlers(bot);
 setupProtectronHandlers(bot, adminId);
 registerTagAllHandlers(bot);
 
-bot.on('web_app_data', async (webAppData) => {
-    const chatId = webAppData.message.chat.id;
-    try {
-        const data = JSON.parse(webAppData.data);
-        await saveWebAppConfig(chatId, data);
-        bot.sendMessage(chatId, "Settings have been updated successfully via the web panel!");
-    } catch (error) {
-        console.error("Error processing web app data:", error);
-        bot.sendMessage(chatId, "There was an error saving your settings.");
-    }
-});
+startCountdownCheck(bot);
 
 console.log('Mr. Yunks bot has started...');
