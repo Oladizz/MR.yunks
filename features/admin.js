@@ -1,17 +1,16 @@
 const { db } = require('../core/firebase');
 const { getUserByUsername, awardXp } = require('../core/users');
 
-function registerAdminHandlers(bot) {
+function registerAdminHandlers(bot, globalAdminIds) { // Accept globalAdminIds as a parameter
     /**
      * Admin command to post an announcement.
      */
     bot.onText(/\/announce (.+)/s, (msg, match) => {
         const chatId = msg.chat.id;
         const userId = msg.from.id;
-        const adminId = process.env.ADMIN_TELEGRAM_ID;
         const announcementText = match[1];
 
-        if (userId.toString() !== adminId) {
+        if (!globalAdminIds.includes(userId.toString())) { // Check against the array
             bot.sendMessage(chatId, "You are not authorized to make announcements.");
             return;
         }
@@ -31,11 +30,10 @@ function registerAdminHandlers(bot) {
     bot.onText(/\/announcetop|\/top(?:\s+(\d+))?/, async (msg, match) => {
         const chatId = msg.chat.id;
         const userId = msg.from.id;
-        const adminId = process.env.ADMIN_TELEGRAM_ID;
         const requestedLimit = match[1] ? parseInt(match[1], 10) : 3;
         const limit = Math.min(Math.max(1, requestedLimit), 10); // Limit to between 1 and 10 for reasonable display
 
-        if (userId.toString() !== adminId) {
+        if (!globalAdminIds.includes(userId.toString())) { // Check against the array
             bot.sendMessage(chatId, "You are not authorized to use this command.");
             return;
         }
@@ -79,7 +77,7 @@ function registerAdminHandlers(bot) {
         const targetUsername = match[1];
         const xpAmount = parseInt(match[2], 10);
 
-        if (callerId.toString() !== process.env.ADMIN_TELEGRAM_ID) {
+        if (!globalAdminIds.includes(callerId.toString())) { // Check against the array
             bot.sendMessage(chatId, "You are not authorized to use this command.");
             return;
         }

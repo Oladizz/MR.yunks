@@ -123,7 +123,7 @@ function registerModerationHandlers(bot) {
             bot.sendMessage(chatId, `@${userToKickUsername} has been kicked from the group.`);
         } catch (error) {
             console.error(`Error kicking user ${userToKickId}:`, error);
-            bot.sendMessage(chatId, `Failed to kick @${userToKickUsername}. Make sure I have the right permissions.`);
+            bot.sendMessage(chatId, `Failed to kick @${userToKickUsername}. Make sure I have the right permissions. Error: ${error.message}`);
         }
     });
 
@@ -162,7 +162,7 @@ function registerModerationHandlers(bot) {
             bot.sendMessage(chatId, `@${userToBanUsername} has been banned from the group.`);
         } catch (error) {
             console.error(`Error banning user ${userToBanId}:`, error);
-            bot.sendMessage(chatId, `Failed to ban @${userToBanUsername}. Make sure I have the right permissions.`);
+            bot.sendMessage(chatId, `Failed to ban @${userToBanUsername}. Make sure I have the right permissions. Error: ${error.message}`);
         }
     });
 
@@ -186,7 +186,7 @@ function registerModerationHandlers(bot) {
             bot.sendMessage(chatId, `User with ID ${userToUnbanId} has been unbanned.`);
         } catch (error) {
             console.error(`Error unbanning user ${userToUnbanId}:`, error);
-            bot.sendMessage(chatId, `Failed to unban user with ID ${userToUnbanId}. Make sure the ID is correct and I have the right permissions.`);
+            bot.sendMessage(chatId, `Failed to unban user with ID ${userToUnbanId}. Make sure the ID is correct and I have the right permissions. Error: ${error.message}`);
         }
     });
 
@@ -244,7 +244,7 @@ function registerModerationHandlers(bot) {
             bot.sendMessage(chatId, response);
         } catch (error) {
             console.error(`Error muting user ${userToMuteId}:`, error);
-            bot.sendMessage(chatId, `Failed to mute @${userToMuteUsername}. Make sure I have the right permissions.`);
+            bot.sendMessage(chatId, `Failed to mute @${userToMuteUsername}. Make sure I have the right permissions. Error: ${error.message}`);
         }
     });
 
@@ -294,7 +294,7 @@ function registerModerationHandlers(bot) {
             bot.sendMessage(chatId, `@${userToUnmuteUsername} has been unmuted.`);
         } catch (error) {
             console.error(`Error unmuting user ${userToUnmuteId}:`, error);
-            bot.sendMessage(chatId, `Failed to unmute @${userToUnmuteUsername}. Make sure I have the right permissions.`);
+            bot.sendMessage(chatId, `Failed to unmute @${userToUnmuteUsername}. Make sure I have the right permissions. Error: ${error.message}`);
         }
     });
 
@@ -343,7 +343,7 @@ function registerModerationHandlers(bot) {
             bot.sendMessage(chatId, `@${userToWarnUsername} has been warned. They now have ${newWarningCount} warning(s).`);
         } catch (error) {
             console.error(`Error issuing warning to user ${userToWarnId}:`, error);
-            bot.sendMessage(chatId, "Failed to issue warning. Please try again.");
+            bot.sendMessage(chatId, `Failed to issue warning. Please try again. Error: ${error.message}`);
         }
     });
 
@@ -383,7 +383,7 @@ function registerModerationHandlers(bot) {
             }
         } catch (error) {
             console.error(`Error fetching warnings for user ${targetUserId}:`, error);
-            bot.sendMessage(chatId, "Failed to fetch warnings. Please try again.");
+            bot.sendMessage(chatId, `Failed to fetch warnings. Please try again. Error: ${error.message}`);
         }
     });
 }

@@ -42,7 +42,7 @@ function registerConfigHandlers(bot) {
 
         } catch (error) {
             console.error("Error preparing settings web app:", error);
-            bot.sendMessage(chatId, "Failed to open settings. Please try again.");
+            bot.sendMessage(chatId, `Failed to open settings. Please try again. Error: ${error.message}`);
         }
     });
 
@@ -64,19 +64,21 @@ function registerConfigHandlers(bot) {
         try {
             const configRef = db.collection('chat_configs').doc(chatId.toString());
             await configRef.set({ welcomeMessage }, { merge: true });
-            bot.sendMessage(chatId, "Welcome message updated successfully.");
+            bot.sendMessage(chatId, "✅ Welcome message updated successfully.");
+            bot.sendMessage(chatId, `ℹ️ *Available Placeholders for Welcome Message:*\n- \`{username}\`: The new member's Telegram username (if available).\n- \`{initiate_name}\`: A randomly assigned initiate name from the bot's data.`, { parse_mode: 'Markdown' });
         } catch (error) {
             console.error("Error updating welcome message:", error);
-            bot.sendMessage(chatId, "Failed to update the welcome message. Please try again.");
+            bot.sendMessage(chatId, `❌ Failed to update the welcome message. Please try again. Error: ${error.message}`);
         }
     });
 
     bot.onText(/\/config show|\/showconfig/, async (msg) => {
         const chatId = msg.chat.id;
         const userId = msg.from.id;
+        const chatType = msg.chat.type;
 
         if (!await isUserAdmin(bot, chatId, userId)) {
-            bot.sendMessage(chatId, "You are not authorized to view the bot's configuration.");
+            bot.sendMessage(chatId, "❌ You are not authorized to view the bot's configuration.");
             return;
         }
 
@@ -84,21 +86,28 @@ function registerConfigHandlers(bot) {
             const configRef = db.collection('chat_configs').doc(chatId.toString());
             const doc = await configRef.get();
 
+            let response = "⚙️ *Current Bot Configuration:*\n";
             if (!doc.exists) {
-                bot.sendMessage(chatId, "No custom configuration found for this chat.");
-                return;
+                response += "\nℹ️ No custom configuration found for this chat.";
+            } else {
+                const config = doc.data();
+                for (const [key, value] of Object.entries(config)) {
+                    response += `\n- *${key}*: \`${JSON.stringify(value)}\``;
+                }
             }
 
-            const config = doc.data();
-            let response = "Current Bot Configuration:\n";
-            for (const [key, value] of Object.entries(config)) {
-                response += `\n- *${key}*: ${JSON.stringify(value)}`;
+            sendRateLimitedMessage(bot, userId, response, { parse_mode: 'Markdown' });
+
+            if (chatType !== 'private') {
+                sendRateLimitedMessage(bot, chatId, "✅ Bot configuration sent to your private chat with me.");
             }
 
-            bot.sendMessage(chatId, response, { parse_mode: 'Markdown' });
         } catch (error) {
             console.error("Error fetching configuration:", error);
-            bot.sendMessage(chatId, "Failed to fetch configuration. Please try again.");
+            sendRateLimitedMessage(bot, userId, `❌ Failed to fetch configuration. Please try again. Error: ${error.message}`);
+            if (chatType !== 'private') {
+                sendRateLimitedMessage(bot, chatId, `❌ An error occurred while fetching configuration. Check your private chat with me for details.`);
+            }
         }
     });
 
@@ -134,7 +143,7 @@ function registerConfigHandlers(bot) {
                 bot.sendMessage(chatId, `"${word}" has been added to the banned words list.`);
             } else {
                 console.error("Error adding banned word:", error);
-                bot.sendMessage(chatId, "Failed to add banned word. Please try again.");
+                bot.sendMessage(chatId, `Failed to add banned word. Please try again. Error: ${error.message}`);
             }
         }
     });
@@ -165,7 +174,7 @@ function registerConfigHandlers(bot) {
             bot.sendMessage(chatId, `"${word}" has been removed from the banned words list.`);
         } catch (error) {
             console.error("Error removing banned word:", error);
-            bot.sendMessage(chatId, "Failed to remove banned word. Please try again.");
+            bot.sendMessage(chatId, `Failed to remove banned word. Please try again. Error: ${error.message}`);
         }
     });
 
@@ -190,7 +199,7 @@ function registerConfigHandlers(bot) {
             }
         } catch (error) {
             console.error("Error listing banned words:", error);
-            bot.sendMessage(chatId, "Failed to list banned words. Please try again.");
+            bot.sendMessage(chatId, `Failed to list banned words. Please try again. Error: ${error.message}`);
         }
     });
 }

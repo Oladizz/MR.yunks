@@ -11,8 +11,10 @@ function registerProphecyHandlers(bot) {
         const username = msg.from.username || `${msg.from.first_name} ${msg.from.last_name || ''}`.trim();
         const question = match[1];
 
+        bot.sendChatAction(chatId, 'typing'); // Visual feedback
+
         if (!question) {
-            bot.sendMessage(chatId, "You must ask a question to the spirits. Usage: /prophecy <your question>");
+            bot.sendMessage(chatId, "⚠️ You must ask a question to the spirits. Usage: /prophecy <your question>");
             return;
         }
 
@@ -23,7 +25,7 @@ function registerProphecyHandlers(bot) {
             const limitDoc = await limitRef.get();
             const currentCount = limitDoc.exists ? limitDoc.data().count : 0;
             if (currentCount >= 3) {
-                bot.sendMessage(chatId, `@${username}, you have already received 3 prophecies today. The spirits must rest.`);
+                bot.sendMessage(chatId, `⏳ @${username}, you have already received 3 prophecies today. The spirits must rest.`);
                 return;
             }
 
@@ -44,7 +46,7 @@ function registerProphecyHandlers(bot) {
             await limitRef.set({ count: currentCount + 1 }, { merge: true });
         } catch (error) {
             console.error("Error in prophecy game:", error);
-            bot.sendMessage(chatId, "The spirits are disturbed. An error occurred.");
+            bot.sendMessage(chatId, `❌ The spirits are disturbed. An error occurred: ${error.message}`);
         }
     });
 }

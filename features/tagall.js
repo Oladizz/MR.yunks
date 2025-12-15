@@ -36,7 +36,7 @@ function registerTagAllHandlers(bot) {
 
         } catch (error) {
             console.error("Error in /tagall command:", error);
-            sendRateLimitedMessage(bot, chatId, "An error occurred while trying to tag everyone.");
+            sendRateLimitedMessage(bot, chatId, `An error occurred while trying to tag everyone. Error: ${error.message}`);
         }
     });
 }

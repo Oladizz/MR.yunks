@@ -10,12 +10,131 @@ function setupProtectronHandlers(bot, adminId) {
 
     registerStatusHandler(bot);
 
+    bot.on('callback_query', async (callbackQuery) => {
+        const msg = callbackQuery.message;
+        const chatId = msg.chat.id;
+        const userId = callbackQuery.from.id;
+        const data = callbackQuery.data;
 
+        if (data.startsWith('protectron_toggle_')) {
+            await bot.answerCallbackQuery(callbackQuery.id); // Acknowledge the callback immediately
 
-    // Toggle Commands
-    bot.onText(/\/antispam/, (msg) => toggleSetting(bot, msg, 'antispam', 'Anti-spam filter'));
-    bot.onText(/\/noevents/, (msg) => toggleSetting(bot, msg, 'noevents', 'Filtering join/leave messages'));
-        bot.onText(/\/nobots/, (msg) => toggleSetting(bot, msg, 'nobots', 'Protection against spam bots'));
+            if (!await isUserAdmin(bot, chatId, userId)) {
+                sendRateLimitedMessage(bot, chatId, "You are not authorized to change Protectron settings.");
+                return;
+            }
+
+            const settingName = data.replace('protectron_toggle_', '');
+            try {
+                const currentValue = await getProtectronSetting(chatId, settingName);
+                const newValue = !currentValue;
+                await setProtectronSetting(chatId, settingName, newValue);
+                
+                // Re-render the status message to reflect the change
+                const configRef = db.collection('protectron_configs').doc(chatId.toString());
+                const doc = await configRef.get();
+                const settings = doc.exists ? doc.data() : {};
+
+                let statusMessage = "🛡️ *Protectron Status* 🛡️\n\n";
+                const inlineKeyboard = [];
+
+                const addToggleRow = (setting, displayName, currentValue) => {
+                    const statusEmoji = currentValue ? '✅' : '❌';
+                    const buttonText = `${statusEmoji} ${displayName}`;
+                    inlineKeyboard.push([{ text: buttonText, callback_data: `protectron_toggle_${setting}` }]);
+                    statusMessage += `*${displayName}:* ${currentValue ? '✅ Enabled' : '❌ Disabled'}\n`;
+                };
+
+                addToggleRow('antispam', 'Anti-spam', settings.antispam);
+                statusMessage += `*Anti-spam Mode:* ${settings.antispam_mode || 'Simple'}\n`;
+                addToggleRow('noevents', 'Filter Join/Leave Messages', settings.noevents);
+                addToggleRow('nobots', 'Protect Against Spam Bots', settings.nobots);
+                addToggleRow('nolinks', 'Filter Links/Mentions/Forwards/Reply Markup', settings.nolinks);
+                addToggleRow('noforwards', 'Filter Forwarded Messages', settings.noforwards);
+                addToggleRow('nocontacts', 'Filter Contact Numbers', settings.nocontacts);
+                addToggleRow('nolocations', 'Filter Locations', settings.nolocations);
+                addToggleRow('nocommands', 'Filter Commands from Group Members', settings.nocommands);
+                addToggleRow('nohashtags', 'Filter Hashtags', settings.nohashtags);
+                addToggleRow('antiflood', 'Anti-flood Protection', settings.antiflood);
+                addToggleRow('imagefilter', 'Image Filter (Pornographic)', settings.imagefilter);
+                addToggleRow('profanity', 'Profanity Filter', settings.profanity);
+
+                const blacklistedWords = await getBlacklistedWords(chatId);
+                statusMessage += `\n*Blacklisted Words:* ${blacklistedWords.length > 0 ? blacklistedWords.join(', ') : 'None'}\n`;
+
+                const whitelistedDomains = await getWhitelistedDomains(chatId);
+                statusMessage += `*Whitelisted Domains:* ${whitelistedDomains.length > 0 ? whitelistedDomains.join(', ') : 'None'}`;
+                
+                inlineKeyboard.push([{ text: '🔄 Refresh Status', callback_data: 'status_refresh' }]);
+                inlineKeyboard.push([{ text: '🔙 Back to Main Protectron Menu', callback_data: 'protectron_main_menu' }]);
+
+                // Edit the original message
+                await bot.editMessageText(statusMessage, {
+                    chat_id: chatId,
+                    message_id: msg.message_id,
+                    parse_mode: 'Markdown',
+                    reply_markup: {
+                        inline_keyboard: inlineKeyboard
+                    }
+                });
+                sendRateLimitedMessage(bot, chatId, `Protectron: ${settingName} has been ${newValue ? 'enabled' : 'disabled'}.`);
+
+            } catch (error) {
+                console.error(`Error toggling Protectron setting ${settingName}:`, error);
+                sendRateLimitedMessage(bot, chatId, `An error occurred while toggling ${settingName}. Error: ${error.message}`);
+            }
+        } // Closing brace for if (data.startsWith('protectron_toggle_'))
+        else if (data === 'status_refresh' || data === 'protectron_main_menu') {
+            await bot.answerCallbackQuery(callbackQuery.id); // Acknowledge the callback immediately
+
+            // Re-render the status message
+            const configRef = db.collection('protectron_configs').doc(chatId.toString());
+            const doc = await configRef.get();
+            const settings = doc.exists ? doc.data() : {};
+
+            let statusMessage = "🛡️ *Protectron Status* 🛡️\n\n";
+            const inlineKeyboard = [];
+
+            const addToggleRow = (setting, displayName, currentValue) => {
+                const statusEmoji = currentValue ? '✅' : '❌';
+                const buttonText = `${statusEmoji} ${displayName}`;
+                inlineKeyboard.push([{ text: buttonText, callback_data: `protectron_toggle_${setting}` }]);
+                statusMessage += `*${displayName}:* ${currentValue ? '✅ Enabled' : '❌ Disabled'}\n`;
+            };
+
+            addToggleRow('antispam', 'Anti-spam', settings.antispam);
+            statusMessage += `*Anti-spam Mode:* ${settings.antispam_mode || 'Simple'}\n`;
+            addToggleRow('noevents', 'Filter Join/Leave Messages', settings.noevents);
+            addToggleRow('nobots', 'Protect Against Spam Bots', settings.nobots);
+            addToggleRow('nolinks', 'Filter Links/Mentions/Forwards/Reply Markup', settings.nolinks);
+            addToggleRow('noforwards', 'Filter Forwarded Messages', settings.noforwards);
+            addToggleRow('nocontacts', 'Filter Contact Numbers', settings.nocontacts);
+            addToggleRow('nolocations', 'Filter Locations', settings.nolocations);
+            addToggleRow('nocommands', 'Filter Commands from Group Members', settings.nocommands);
+            addToggleRow('nohashtags', 'Filter Hashtags', settings.nohashtags);
+            addToggleRow('antiflood', 'Anti-flood Protection', settings.antiflood);
+            addToggleRow('imagefilter', 'Image Filter (Pornographic)', settings.imagefilter);
+            addToggleRow('profanity', 'Profanity Filter', settings.profanity);
+
+            const blacklistedWords = await getBlacklistedWords(chatId);
+            statusMessage += `\n*Blacklisted Words:* ${blacklistedWords.length > 0 ? blacklistedWords.join(', ') : 'None'}\n`;
+
+            const whitelistedDomains = await getWhitelistedDomains(chatId);
+            statusMessage += `*Whitelisted Domains:* ${whitelistedDomains.length > 0 ? whitelistedDomains.join(', ') : 'None'}`;
+            
+            inlineKeyboard.push([{ text: '🔄 Refresh Status', callback_data: 'status_refresh' }]);
+            inlineKeyboard.push([{ text: '🔙 Back to Main Protectron Menu', callback_data: 'protectron_main_menu' }]);
+            
+            await bot.editMessageText(statusMessage, {
+                chat_id: chatId,
+                message_id: msg.message_id,
+                parse_mode: 'Markdown',
+                reply_markup: {
+                    inline_keyboard: inlineKeyboard
+                }
+            });
+        }
+    });
     bot.onText(/\/nolinks/, (msg) => toggleSetting(bot, msg, 'nolinks', 'Filtering links, mentions, forwards, reply markup'));
     bot.onText(/\/noforwards/, (msg) => toggleSetting(bot, msg, 'noforwards', 'Filtering forwarded messages'));
     bot.onText(/\/nocontacts/, (msg) => toggleSetting(bot, msg, 'nocontacts', 'Filtering contact numbers'));
@@ -47,7 +166,7 @@ function setupProtectronHandlers(bot, adminId) {
             sendRateLimitedMessage(bot, chatId, `Protectron: Anti-spam mode set to *${mode}*.`, { parse_mode: 'Markdown' });
         } catch (error) {
             console.error("Error setting anti-spam mode:", error);
-            sendRateLimitedMessage(bot, chatId, "An error occurred while setting the anti-spam mode.");
+            sendRateLimitedMessage(bot, chatId, `An error occurred while setting the anti-spam mode: ${error.message}`);
         }
     });
 
@@ -79,7 +198,7 @@ function setupProtectronHandlers(bot, adminId) {
                 sendRateLimitedMessage(bot, chatId, `"${word}" has been added to the blacklisted words list.`);
             } else {
                 console.error("Error adding blacklisted word:", error);
-                sendRateLimitedMessage(bot, chatId, "Failed to add blacklisted word. Please try again.");
+                sendRateLimitedMessage(bot, chatId, `Failed to add blacklisted word. Please try again. Error: ${error.message}`);
             }
         }
     });
@@ -107,7 +226,7 @@ function setupProtectronHandlers(bot, adminId) {
             sendRateLimitedMessage(bot, chatId, `"${word}" has been removed from the blacklisted words list.`);
         } catch (error) {
             console.error("Error removing blacklisted word:", error);
-            sendRateLimitedMessage(bot, chatId, "Failed to remove blacklisted word. Please try again.");
+            sendRateLimitedMessage(bot, chatId, `Failed to remove blacklisted word. Please try again. Error: ${error.message}`);
         }
     });
 
@@ -126,29 +245,40 @@ function setupProtectronHandlers(bot, adminId) {
             sendRateLimitedMessage(bot, chatId, "The blacklisted words list has been cleared.");
         } catch (error) {
             console.error("Error clearing blacklisted words:", error);
-            sendRateLimitedMessage(bot, chatId, "Failed to clear blacklisted words. Please try again.");
+            sendRateLimitedMessage(bot, chatId, `Failed to clear blacklisted words. Please try again. Error: ${error.message}`);
         }
     });
 
     bot.onText(/\/blacklist/, async (msg) => {
         const chatId = msg.chat.id;
         const userId = msg.from.id;
+        const chatType = msg.chat.type;
 
         if (!await isUserAdmin(bot, chatId, userId)) {
-            sendRateLimitedMessage(bot, chatId, "You are not authorized to view the blacklisted words list.");
+            sendRateLimitedMessage(bot, chatId, "❌ You are not authorized to view the blacklisted words list.");
             return;
         }
 
         try {
             const blacklistedWords = await getBlacklistedWords(chatId);
+            let responseMessage;
             if (blacklistedWords.length > 0) {
-                sendRateLimitedMessage(bot, chatId, `Blacklisted words: \n- ${blacklistedWords.join('\n- ')}`);
+                responseMessage = `📜 *Blacklisted words for this chat:*\n- ${blacklistedWords.join('\n- ')}`;
             } else {
-                sendRateLimitedMessage(bot, chatId, "There are no blacklisted words in this chat.");
+                responseMessage = "ℹ️ There are no blacklisted words in this chat.";
+            }
+            
+            sendRateLimitedMessage(bot, userId, responseMessage, { parse_mode: 'Markdown' });
+
+            if (chatType !== 'private') {
+                sendRateLimitedMessage(bot, chatId, "✅ Blacklisted words list sent to your private chat with me.");
             }
         } catch (error) {
             console.error("Error listing blacklisted words:", error);
-            sendRateLimitedMessage(bot, chatId, "Failed to list blacklisted words. Please try again.");
+            sendRateLimitedMessage(bot, userId, `❌ Failed to list blacklisted words. Please try again. Error: ${error.message}`);
+            if (chatType !== 'private') {
+                sendRateLimitedMessage(bot, chatId, `❌ An error occurred while listing blacklisted words. Check your private chat with me for details.`);
+            }
         }
     });
     // Whitelist Commands
@@ -179,7 +309,7 @@ function setupProtectronHandlers(bot, adminId) {
                 sendRateLimitedMessage(bot, chatId, `"${domain}" has been added to the whitelisted domains list.`);
             } else {
                 console.error("Error adding whitelisted domain:", error);
-                sendRateLimitedMessage(bot, chatId, "Failed to add whitelisted domain. Please try again.");
+                sendRateLimitedMessage(bot, chatId, `Failed to add whitelisted domain. Please try again. Error: ${error.message}`);
             }
         }
     });
@@ -207,7 +337,7 @@ function setupProtectronHandlers(bot, adminId) {
             sendRateLimitedMessage(bot, chatId, `"${domain}" has been removed from the whitelisted domains list.`);
         } catch (error) {
             console.error("Error removing whitelisted domain:", error);
-            sendRateLimitedMessage(bot, chatId, "Failed to remove whitelisted domain. Please try again.");
+            sendRateLimitedMessage(bot, chatId, `Failed to remove whitelisted domain. Please try again. Error: ${error.message}`);
         }
     });
 
@@ -226,29 +356,40 @@ function setupProtectronHandlers(bot, adminId) {
             sendRateLimitedMessage(bot, chatId, "The whitelisted domains list has been cleared.");
         } catch (error) {
             console.error("Error clearing whitelisted domains:", error);
-            sendRateLimitedMessage(bot, chatId, "Failed to clear whitelisted domains. Please try again.");
+            sendRateLimitedMessage(bot, chatId, `Failed to clear whitelisted domains. Please try again. Error: ${error.message}`);
         }
     });
 
     bot.onText(/\/whitelist/, async (msg) => {
         const chatId = msg.chat.id;
         const userId = msg.from.id;
+        const chatType = msg.chat.type;
 
         if (!await isUserAdmin(bot, chatId, userId)) {
-            sendRateLimitedMessage(bot, chatId, "You are not authorized to view the whitelisted domains list.");
+            sendRateLimitedMessage(bot, chatId, "❌ You are not authorized to view the whitelisted domains list.");
             return;
         }
 
         try {
             const whitelistedDomains = await getWhitelistedDomains(chatId);
+            let responseMessage;
             if (whitelistedDomains.length > 0) {
-                sendRateLimitedMessage(bot, chatId, `Whitelisted domains: \n- ${whitelistedDomains.join('\n- ')}`);
+                responseMessage = `📜 *Whitelisted domains for this chat:*\n- ${whitelistedDomains.join('\n- ')}`;
             } else {
-                sendRateLimitedMessage(bot, chatId, "There are no whitelisted domains in this chat.");
+                responseMessage = "ℹ️ There are no whitelisted domains in this chat.";
+            }
+
+            sendRateLimitedMessage(bot, userId, responseMessage, { parse_mode: 'Markdown' });
+
+            if (chatType !== 'private') {
+                sendRateLimitedMessage(bot, chatId, "✅ Whitelisted domains list sent to your private chat with me.");
             }
         } catch (error) {
             console.error("Error listing whitelisted domains:", error);
-            sendRateLimitedMessage(bot, chatId, "Failed to list whitelisted domains. Please try again.");
+            sendRateLimitedMessage(bot, userId, `❌ Failed to list whitelisted domains. Please try again. Error: ${error.message}`);
+            if (chatType !== 'private') {
+                sendRateLimitedMessage(bot, chatId, `❌ An error occurred while listing whitelisted domains. Check your private chat with me for details.`);
+            }
         }
     });
 }

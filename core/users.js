@@ -1,5 +1,25 @@
 const { db } = require('./firebase');
 
+// --- Leveling System Helpers ---
+function xpToReachLevel(level) {
+    if (level <= 1) return 0;
+    return 5 * level * (level - 1); // e.g., Level 2 = 10 XP, Level 3 = 30 XP, Level 4 = 60 XP
+}
+
+function calculateLevel(xp) {
+    if (xp < 0) return 1; // Level 1 is base
+    let level = 1;
+    while (xp >= xpToReachLevel(level + 1)) {
+        level++;
+    }
+    return level;
+}
+
+function calculateXpForNextLevel(currentLevel) {
+    return xpToReachLevel(currentLevel + 1);
+}
+// -----------------------------
+
 async function getUserByUsername(username) {
     if (!username) return null;
     const usersRef = db.collection('users');
@@ -68,23 +88,34 @@ async function updateUserInDb(user, chatId) {
 async function awardXp(userId, amount) {
     const userRef = db.collection('users').doc(userId.toString());
     try {
+        let result = {};
         await db.runTransaction(async (transaction) => {
             const userDoc = await transaction.get(userRef);
-            if (!userDoc.exists) {
-                // Should not happen if updateUserInDb is called reliably, but good to handle
-                console.warn(`Attempted to award XP to non-existent user: ${userId}`);
-                transaction.set(userRef, { xp: amount }, { merge: true }); // Create with XP
+            let currentXp = 0;
+            let currentLevel = 0;
+
+            if (userDoc.exists) {
+                currentXp = userDoc.data().xp || 0;
+                currentLevel = userDoc.data().level || 0;
             } else {
-                const currentXp = userDoc.data().xp || 0;
-                const newXp = currentXp + amount;
-                transaction.update(userRef, { xp: newXp });
-                console.log(`User ${userId} now has ${newXp} XP.`);
-                // TODO: Add leveling logic here or call a separate leveling function
+                // Should not happen if updateUserInDb is called reliably, but good to handle
+                console.warn(`Attempted to award XP to non-existent user: ${userId}. Initializing with 0 XP.`);
+                transaction.set(userRef, { xp: 0, level: 0 }, { merge: true });
             }
+
+            const newXp = currentXp + amount;
+            const newLevel = calculateLevel(newXp);
+
+            transaction.update(userRef, { xp: newXp, level: newLevel });
+            console.log(`User ${userId} now has ${newXp} XP (Level ${newLevel}).`);
+
+            result = { newXp, newLevel, levelChanged: newLevel > currentLevel };
         });
+        return result;
     } catch (error) {
         console.error(`Error awarding XP to user ${userId}:`, error);
+        return { newXp: 0, newLevel: 0, levelChanged: false };
     }
 }
 
-module.exports = { getUserByUsername, updateUserInDb, awardXp };
+module.exports = { getUserByUsername, updateUserInDb, awardXp, calculateLevel, calculateXpForNextLevel };

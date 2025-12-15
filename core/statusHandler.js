@@ -7,9 +7,10 @@ function registerStatusHandler(bot) {
     bot.onText(/\/status/, async (msg) => {
         var chatId = msg.chat.id;
         var userId = msg.from.id;
+        var chatType = msg.chat.type;
 
         if (!await isUserAdmin(bot, chatId, userId)) {
-            sendRateLimitedMessage(bot, chatId, "You are not authorized to view Protectron settings.");
+            sendRateLimitedMessage(bot, chatId, "❌ You are not authorized to view Protectron settings.");
             return;
         }
 
@@ -19,20 +20,28 @@ function registerStatusHandler(bot) {
             const settings = doc.exists ? doc.data() : {};
 
             let statusMessage = "🛡️ *Protectron Status* 🛡️\n\n";
+            const inlineKeyboard = [];
 
-            statusMessage += `*Anti-spam:* ${settings.antispam ? '✅ Enabled' : '❌ Disabled'}\n`;
+            const addToggleRow = (setting, displayName, currentValue) => {
+                const statusEmoji = currentValue ? '✅' : '❌';
+                const buttonText = `${statusEmoji} ${displayName}`;
+                inlineKeyboard.push([{ text: buttonText, callback_data: `protectron_toggle_${setting}` }]);
+                statusMessage += `*${displayName}:* ${currentValue ? '✅ Enabled' : '❌ Disabled'}\n`;
+            };
+
+            addToggleRow('antispam', 'Anti-spam', settings.antispam);
             statusMessage += `*Anti-spam Mode:* ${settings.antispam_mode || 'Simple'}\n`;
-            statusMessage += `*Filter Join/Leave Messages:* ${settings.noevents ? '✅ Enabled' : '❌ Disabled'}\n`;
-            statusMessage += `*Protect Against Spam Bots:* ${settings.nobots ? '✅ Enabled' : '❌ Disabled'}\n`;
-            statusMessage += `*Filter Links/Mentions/Forwards/Reply Markup:* ${settings.nolinks ? '✅ Enabled' : '❌ Disabled'}\n`;
-            statusMessage += `*Filter Forwarded Messages:* ${settings.noforwards ? '✅ Enabled' : '❌ Disabled'}\n`;
-            statusMessage += `*Filter Contact Numbers:* ${settings.nocontacts ? '✅ Enabled' : '❌ Disabled'}\n`;
-            statusMessage += `*Filter Locations:* ${settings.nolocations ? '✅ Enabled' : '❌ Disabled'}\n`;
-            statusMessage += `*Filter Commands from Group Members:* ${settings.nocommands ? '✅ Enabled' : '❌ Disabled'}\n`;
-            statusMessage += `*Filter Hashtags:* ${settings.nohashtags ? '✅ Enabled' : '❌ Disabled'}\n`;
-            statusMessage += `*Anti-flood Protection:* ${settings.antiflood ? '✅ Enabled' : '❌ Disabled'}\n`;
-            statusMessage += `*Image Filter (Pornographic):* ${settings.imagefilter ? '✅ Enabled' : '❌ Disabled'}\n`;
-            statusMessage += `*Profanity Filter:* ${settings.profanity ? '✅ Enabled' : '❌ Disabled'}\n`;
+            addToggleRow('noevents', 'Filter Join/Leave Messages', settings.noevents);
+            addToggleRow('nobots', 'Protect Against Spam Bots', settings.nobots);
+            addToggleRow('nolinks', 'Filter Links/Mentions/Forwards/Reply Markup', settings.nolinks);
+            addToggleRow('noforwards', 'Filter Forwarded Messages', settings.noforwards);
+            addToggleRow('nocontacts', 'Filter Contact Numbers', settings.nocontacts);
+            addToggleRow('nolocations', 'Filter Locations', settings.nolocations);
+            addToggleRow('nocommands', 'Filter Commands from Group Members', settings.nocommands);
+            addToggleRow('nohashtags', 'Filter Hashtags', settings.nohashtags);
+            addToggleRow('antiflood', 'Anti-flood Protection', settings.antiflood);
+            addToggleRow('imagefilter', 'Image Filter (Pornographic)', settings.imagefilter);
+            addToggleRow('profanity', 'Profanity Filter', settings.profanity);
 
             const blacklistedWords = await getBlacklistedWords(chatId);
             statusMessage += `\n*Blacklisted Words:* ${blacklistedWords.length > 0 ? blacklistedWords.join(', ') : 'None'}\n`;
@@ -40,11 +49,28 @@ function registerStatusHandler(bot) {
             const whitelistedDomains = await getWhitelistedDomains(chatId);
             statusMessage += `*Whitelisted Domains:* ${whitelistedDomains.length > 0 ? whitelistedDomains.join(', ') : 'None'}`;
 
-            sendRateLimitedMessage(bot, chatId, statusMessage, { parse_mode: 'Markdown' });
+            // Send full status to the user who invoked the command
+            inlineKeyboard.push([{ text: '🔄 Refresh Status', callback_data: 'status_refresh' }]); // Add refresh button
+            inlineKeyboard.push([{ text: '🔙 Back to Main Protectron Menu', callback_data: 'protectron_main_menu' }]); // New back button
+
+            sendRateLimitedMessage(bot, userId, statusMessage, {
+                parse_mode: 'Markdown',
+                reply_markup: {
+                    inline_keyboard: inlineKeyboard
+                }
+            });
+
+            // If it was a group chat, send a concise message to the group
+            if (chatType !== 'private') {
+                sendRateLimitedMessage(bot, chatId, "✅ Protectron status sent to your private chat with me.");
+            }
 
         } catch (error) {
             console.error("Error fetching Protectron status:", error);
-            sendRateLimitedMessage(bot, chatId, "An error occurred while fetching Protectron status. Please try again.");
+            sendRateLimitedMessage(bot, userId, `❌ An error occurred while fetching Protectron status: ${error.message}`);
+            if (chatType !== 'private') {
+                sendRateLimitedMessage(bot, chatId, `❌ An error occurred while fetching Protectron status. Please check your private chat with me for details.`);
+            }
         }
     });
 }

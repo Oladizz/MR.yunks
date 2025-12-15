@@ -15,6 +15,7 @@
     "express": "^5.2.1",
     "firebase-admin": "^13.6.0",
     "node-telegram-bot-api": "^0.66.0",
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "js-levenshtein": "^1.1.6"
   }
 }
