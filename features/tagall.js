@@ -19,20 +19,32 @@ function registerTagAllHandlers(bot) {
                 return;
             }
 
-            let text = match[1] ? `${match[1]}\n\n` : 'Tagging all known members:\n\n';
-            let mentions = [];
+            const allMentions = [];
             membersSnapshot.forEach(doc => {
                 const user = doc.data();
                 if (user.username) {
-                    mentions.push(`@${user.username}`);
+                    allMentions.push(`@${user.username}`);
                 } else {
-                    mentions.push(`[${user.first_name || 'user'}](tg://user?id=${doc.id})`);
+                    allMentions.push(`[${user.first_name || 'user'}](tg://user?id=${doc.id})`);
                 }
             });
 
-            const message = text + mentions.join(' ');
+            const maxMessageLength = 4096;
+            let currentMessage = text;
+            let messages = [];
 
-            sendRateLimitedMessage(bot, chatId, message, { parse_mode: 'Markdown', disable_notification: true });
+            for (const mention of allMentions) {
+                if (currentMessage.length + mention.length + 1 > maxMessageLength) {
+                    messages.push(currentMessage);
+                    currentMessage = text;
+                }
+                currentMessage += `${mention} `;
+            }
+            messages.push(currentMessage.trim());
+
+            for (const message of messages) {
+                await sendRateLimitedMessage(bot, chatId, message, { parse_mode: 'Markdown', disable_notification: true });
+            }
 
         } catch (error) {
             console.error("Error in /tagall command:", error);

@@ -78,31 +78,31 @@ These powerful commands allow administrators to maintain order, manage members, 
 
 - <code>/tagall [message]</code>: Silently tags all known members in the chat.
   <i>Example: <code>/tagall Important announcement, check pinned message!</code></i>
-- <code>/announce <message></code>: Post an announcement visible to all chat members.
+- <code>/announce [message]</code>: Post an announcement visible to all chat members.
   <i>Example: <code>/announce New rules effective today! Read them now.</code></i>
 - <code>/announcetop</code> or <code>/top [number]</code>: Announce top active members (e.g., /top 5 to show top 5).
 - <code>/settings</code>: Open bot settings (via web app).
-- <code>/setwelcome <message></code>: Set a custom welcome message for new members.
+- <code>/setwelcome [message]</code>: Set a custom welcome message for new members.
   <i>Example: <code>/setwelcome Welcome, {username}! Your journey begins...</code></i>
 - <code>/showconfig</code>: Show the current bot configuration.
-- <code>/banword <word></code>: Add a word to the banned words list.
+- <code>/banword [word]</code>: Add a word to the banned words list.
   <i>Example: <code>/banword spam</code></i>
-- <code>/unbanword <word></code>: Remove a word from the banned words list.
+- <code>/unbanword [word]</code>: Remove a word from the banned words list.
 - <code>/bannedwords</code>: List all banned words.
 - <code>/cultclash</code>: Start a Cult Clash game.
 - <code>/kick @username</code>: Kick a user from the group.
   <i>Example: <code>/kick @baduser</code></i>
 - <code>/ban @username</code>: Ban a user from the group permanently.
-- <code>/unban &lt;user_id&gt;</code>: Unban a user by their ID.
+- <code>/unban [user_id]</code>: Unban a user by their ID.
 - <code>/mute @username [duration]</code>: Mute a user for a specified duration (e.g., 30m, 2h, 1d).
   <i>Example: <code>/mute @noisyuser 1h</code></i>
 - <code>/unmute @username</code>: Unmute a user.
 - <code>/warn @username</code>: Warn a user.
 - <code>/warnings @username</code>: Check a user's warnings.
-- <code>/add_user_to_db &lt;user_id&gt;</code>: Manually add a user to the database for tagging purposes.
-- <code>/countdown &lt;duration&gt; [message]</code>: Start a countdown (e.g., 5m, 1h, 2d).
+- <code>/add_user_to_db [user_id]</code>: Manually add a user to the database for tagging purposes.
+- <code>/countdown [duration] [message]</code>: Start a countdown (e.g., 5m, 1h, 2d).
   <i>Example: <code>/countdown 1d Event starts tomorrow!</code></i>
-- <code>/awardxp @username &lt;amount&gt;</code>: Award XP to a user.
+- <code>/awardxp @username [amount]</code>: Award XP to a user.
   <i>Example: <code>/awardxp @winner 100</code></i>
 `;
         } else if (data === 'help_protectron') {
