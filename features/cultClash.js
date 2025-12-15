@@ -264,24 +264,14 @@ You have 30 seconds to join the fight!`;
 
         bot.answerCallbackQuery(callbackQuery.id, { text: "You have joined the clash!" });
         
-        game.currentMessageText = `${game.currentMessageText}\n👤 <code>@${username}</code> has joined the Cult Clash!`;
-        if (game.gameMessageId) {
-            try {
-                await bot.editMessageText(game.currentMessageText, {
-                    chat_id: chatId,
-                    message_id: game.gameMessageId,
-                    parse_mode: 'HTML',
-                    reply_markup: { // Keep the button visible
-                        inline_keyboard: [[{ text: '⚔️ Join the Clash', callback_data: 'cc_join' }]]
-                    }
-                });
-                game.lastBotMessageId = game.gameMessageId;
-            } catch (error) {
-                if (!error.message.includes('message is not modified')) {
-                     console.error("Error editing join message in Cult Clash (callback):", error);
-                }
-            }
-        }
+        const joinMessageText = `${game.currentMessageText}\n👤 <code>@${username}</code> has joined the Cult Clash!`;
+        const options = {
+            reply_markup: { // Keep the button visible
+                inline_keyboard: [[{ text: '⚔️ Join the Clash', callback_data: 'cc_join' }]]
+            },
+            parse_mode: 'HTML'
+        };
+        await updateLastBotMessage(bot, chatId, game, joinMessageText, options);
     });
 }
 

@@ -1,4 +1,5 @@
 const { getUserByUsername, awardXp } = require('../core/users');
+const { updateLastBotMessage } = require('../core/gameMessageUtils');
 const shadowGames = {};
 
 // Function to generate the status message and keyboard, without sending
@@ -512,25 +513,18 @@ Tap to enter…
             await awardXp(userId, 5); // Award XP for joining
             
             if (game.joinMessageId) {
-                try {
-                    const currentJoinMessage = (await bot.editMessageText(`🌒 JOIN THE SHADOWS
+                const joinMessageText = `🌒 JOIN THE SHADOWS
 Tap to enter…
 ⏳ Time left: ${Math.floor(game.joinTimeLeft / 60)}:${(game.joinTimeLeft % 60).toString().padStart(2, '0')} minutes
 
-<i>Joined Players: ${Object.values(game.players).map(p => `<code>@${p.username}</code>`).join(', ')}</i>`, {
-                        chat_id: chatId,
-                        message_id: game.joinMessageId,
-                        reply_markup: {
-                            inline_keyboard: [[{ text: '🕶️ Enter the Shadows', callback_data: 'sg_join' }]]
-                        },
-                        parse_mode: 'HTML'
-                    })).text;
-                    game.lastBotMessageId = game.joinMessageId;
-                } catch (error) {
-                    console.error("Error editing join message:", error);
-                    const sentMsg = await bot.sendMessage(chatId, `👤 @${username} entered the shadows…`); // Fallback
-                    game.lastBotMessageId = sentMsg.message_id;
-                }
+<i>Joined Players: ${Object.values(game.players).map(p => `<code>@${p.username}</code>`).join(', ')}</i>`;
+                const options = {
+                    reply_markup: {
+                        inline_keyboard: [[{ text: '🕶️ Enter the Shadows', callback_data: 'sg_join' }]]
+                    },
+                    parse_mode: 'HTML'
+                };
+                await updateLastBotMessage(bot, chatId, game, joinMessageText, options);
             } else {
                 const sentMsg = await bot.sendMessage(chatId, `👤 @${username} entered the shadows…`); // Fallback if joinMessageId is somehow missing
                 game.lastBotMessageId = sentMsg.message_id;
