@@ -260,6 +260,7 @@ function registerShadowGameHandlers(bot) {
             starterId: msg.from.id,
             players: {},
             isJoiningPhase: true,
+            isGameRunning: true,
             joinDuration: 0,
             joinTimeLeft: null,
             joinTimer: null,
