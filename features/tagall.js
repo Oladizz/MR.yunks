@@ -25,26 +25,26 @@ function registerTagAllHandlers(bot) {
                 if (user.username) {
                     allMentions.push(`@${user.username}`);
                 } else {
-                    allMentions.push(`[${user.first_name || 'user'}](tg://user?id=${doc.id})`);
+                    const sanitizedFirstName = (user.first_name || 'user').replace(/\[/g, '(').replace(/\]/g, ')');
+                    allMentions.push(`[${sanitizedFirstName}](tg://user?id=${doc.id})`);
                 }
             });
 
-            const maxMessageLength = 4096;
-            const text = match[1] ? `${match[1]}\n\n` : 'Tagging all known members:\n\n';
-            let currentMessage = text;
-            let messages = [];
+            const maxMessageLength = 4000; // Reduced for safety
+            const baseText = match[1] ? `${match[1]}\n\n` : 'Tagging all known members:\n\n';
+            let currentMessage = baseText;
 
             for (const mention of allMentions) {
                 if (currentMessage.length + mention.length + 1 > maxMessageLength) {
-                    messages.push(currentMessage);
-                    currentMessage = text;
+                    await sendRateLimitedMessage(bot, chatId, currentMessage, { parse_mode: 'Markdown', disable_notification: true });
+                    currentMessage = baseText;
                 }
                 currentMessage += `${mention} `;
             }
-            messages.push(currentMessage.trim());
 
-            for (const message of messages) {
-                await sendRateLimitedMessage(bot, chatId, message, { parse_mode: 'Markdown', disable_notification: true });
+            // Send any remaining mentions
+            if (currentMessage.trim() !== baseText.trim()) {
+                await sendRateLimitedMessage(bot, chatId, currentMessage.trim(), { parse_mode: 'Markdown', disable_notification: true });
             }
 
         } catch (error) {
