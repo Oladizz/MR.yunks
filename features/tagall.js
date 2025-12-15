@@ -30,6 +30,7 @@ function registerTagAllHandlers(bot) {
             });
 
             const maxMessageLength = 4096;
+            const text = match[1] ? `${match[1]}\n\n` : 'Tagging all known members:\n\n';
             let currentMessage = text;
             let messages = [];
 
