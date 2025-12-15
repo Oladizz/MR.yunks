@@ -25,18 +25,18 @@ function registerMiscHandlers(bot) {
         const isAdmin = await isUserAdmin(bot, chatId, userId);
 
         let helpMessage = `
-*Mr. Yunks Bot Features*
+<b>Mr. Yunks Bot Features</b>
 
-*General Commands:*
-- \`/start\`: Start interacting with the bot.
-- \`/help\`: Shows this help message.
-- \`/prophecy <question>\`: Get a prophecy.
-- \`/leaderboard [number]\`: Display the top XP earners (e.g., /leaderboard 5 to show top 5).
+<b>General Commands:</b>
+- <code>/start</code>: Start interacting with the bot.
+- <code>/help</code>: Shows this help message.
+- <code>/prophecy &lt;question&gt;</code>: Get a prophecy.
+- <code>/leaderboard [number]</code>: Display the top XP earners (e.g., /leaderboard 5 to show top 5).
 - Send a photo to convert it to a sticker.
 
-⚙️ *Admin Commands*: Manage your chat with moderation tools, settings, and game controls.
-🛡️ *Protectron Commands*: Advanced spam and content filtering for a clean chat environment.
-🎮 *Game Commands*: Engage with fun and interactive mini-games like Cult Clash and Shadow Game.
+<b>⚙️ Admin Commands</b>: Manage your chat with moderation tools, settings, and game controls.
+<b>🛡️ Protectron Commands</b>: Advanced spam and content filtering for a clean chat environment.
+<b>🎮 Game Commands</b>: Engage with fun and interactive mini-games like Cult Clash and Shadow Game.
 `;
         
         const inlineKeyboard = [];
@@ -48,7 +48,7 @@ function registerMiscHandlers(bot) {
 
 
         const opts = {
-            parse_mode: 'Markdown',
+            parse_mode: 'HTML',
             reply_markup: {
                 inline_keyboard: inlineKeyboard
             }
@@ -72,38 +72,38 @@ function registerMiscHandlers(bot) {
                 return;
             }
             responseText = `
-*⚙️ Admin Commands - Your Toolkit for Chat Management ⚙️*
+<b>⚙️ Admin Commands - Your Toolkit for Chat Management ⚙️</b>
 
 These powerful commands allow administrators to maintain order, manage members, and configure the bot's behavior within the chat.
 
-- \`/tagall [message]\`: Silently tags all known members in the chat.
-  _Example: \`/tagall Important announcement, check pinned message!\`_
-- \`/announce <message>\`: Post an announcement visible to all chat members.
-  _Example: \`/announce New rules effective today! Read them now.\`_
-- \`/announcetop\` or \`/top [number]\`: Announce top active members (e.g., /top 5 to show top 5).
-- \`/settings\`: Open bot settings (via web app).
-- \`/setwelcome <message>\`: Set a custom welcome message for new members.
-  _Example: \`/setwelcome Welcome, {username}! Your journey begins...\`_
-- \`/showconfig\`: Show the current bot configuration.
-- \`/banword <word>\`: Add a word to the banned words list.
-  _Example: \`/banword spam\`_
-- \`/unbanword <word>\`: Remove a word from the banned words list.
-- \`/bannedwords\`: List all banned words.
-- \`/cultclash\`: Start a Cult Clash game.
-- \`/kick @username\`: Kick a user from the group.
-  _Example: \`/kick @baduser\`_
-- \`/ban @username\`: Ban a user from the group permanently.
-- \`/unban <user_id>\`: Unban a user by their ID.
-- \`/mute @username [duration]\`: Mute a user for a specified duration (e.g., 30m, 2h, 1d).
-  _Example: \`/mute @noisyuser 1h\`_
-- \`/unmute @username\`: Unmute a user.
-- \`/warn @username\`: Warn a user.
-- \`/warnings @username\`: Check a user's warnings.
-- \`/add_user_to_db <user_id>\`: Manually add a user to the database for tagging purposes.
-- \`/countdown <duration> [message]\`: Start a countdown (e.g., 5m, 1h, 2d).
-  _Example: \`/countdown 1d Event starts tomorrow!\`_
-- \`/awardxp @username <amount>\`: Award XP to a user.
-  _Example: \`/awardxp @winner 100\`_
+- <code>/tagall [message]</code>: Silently tags all known members in the chat.
+  <i>Example: <code>/tagall Important announcement, check pinned message!</code></i>
+- <code>/announce <message></code>: Post an announcement visible to all chat members.
+  <i>Example: <code>/announce New rules effective today! Read them now.</code></i>
+- <code>/announcetop</code> or <code>/top [number]</code>: Announce top active members (e.g., /top 5 to show top 5).
+- <code>/settings</code>: Open bot settings (via web app).
+- <code>/setwelcome <message></code>: Set a custom welcome message for new members.
+  <i>Example: <code>/setwelcome Welcome, {username}! Your journey begins...</code></i>
+- <code>/showconfig</code>: Show the current bot configuration.
+- <code>/banword <word></code>: Add a word to the banned words list.
+  <i>Example: <code>/banword spam</code></i>
+- <code>/unbanword <word></code>: Remove a word from the banned words list.
+- <code>/bannedwords</code>: List all banned words.
+- <code>/cultclash</code>: Start a Cult Clash game.
+- <code>/kick @username</code>: Kick a user from the group.
+  <i>Example: <code>/kick @baduser</code></i>
+- <code>/ban @username</code>: Ban a user from the group permanently.
+- <code>/unban &lt;user_id&gt;</code>: Unban a user by their ID.
+- <code>/mute @username [duration]</code>: Mute a user for a specified duration (e.g., 30m, 2h, 1d).
+  <i>Example: <code>/mute @noisyuser 1h</code></i>
+- <code>/unmute @username</code>: Unmute a user.
+- <code>/warn @username</code>: Warn a user.
+- <code>/warnings @username</code>: Check a user's warnings.
+- <code>/add_user_to_db &lt;user_id&gt;</code>: Manually add a user to the database for tagging purposes.
+- <code>/countdown &lt;duration&gt; [message]</code>: Start a countdown (e.g., 5m, 1h, 2d).
+  <i>Example: <code>/countdown 1d Event starts tomorrow!</code></i>
+- <code>/awardxp @username &lt;amount&gt;</code>: Award XP to a user.
+  <i>Example: <code>/awardxp @winner 100</code></i>
 `;
         } else if (data === 'help_protectron') {
             if (!isAdmin && msg.chat.type !== 'private') {
@@ -111,74 +111,80 @@ These powerful commands allow administrators to maintain order, manage members, 
                 return;
             }
             responseText = `
-*🛡️ Protectron Commands - Advanced Chat Security 🛡️*
+<b>🛡️ Protectron Commands - Advanced Chat Security 🛡️</b>
 
 Protectron offers a suite of powerful moderation tools to keep your chat clean and safe. These commands are for administrators only.
 
-- \`/status\`: Display current Protectron settings for this chat.
-- \`/antispam\`: Toggle the general anti-spam filter (on/off).
-- \`/antispam_mode <mode>\`: Set anti-spam mode (_Simple_ or _Advanced_).
-  _Example: \`/antispam_mode Advanced\`_
-- \`/noevents\`: Toggle filtering of join/leave messages.
-- \`/nobots\`: Toggle protection against spam bots.
-- \`/nolinks\`: Toggle filtering messages with links, mentions, forwards, reply markup.
-- \`/noforwards\`: Toggle filtering forwarded messages.
-- \`/nocontacts\`: Toggle filtering messages with contact numbers.
-- \`/nolocations\`: Toggle filtering messages with locations.
-- \`/nocommands\`: Toggle filtering commands from group members.
-- \`/nohashtags\`: Toggle filtering messages with hashtags.
-- \`/antiflood\`: Toggle anti-flood protection.
-- \`/imagefilter\`: Toggle pornographic image filter.
-- \`/profanity\`: Toggle offensive language filter.
-- \`/blacklist\`: View blacklisted words.
-- \`/blacklist_add <word>\`: Add a word to the blacklist. Messages containing this word will be deleted.
-  _Example: \`/blacklist_add badword\`_
-- \`/blacklist_remove <word>\`: Remove a word from the blacklist.
-- \`/blacklist_clear\`: Clear all blacklisted words.
-- \`/whitelist\`: View whitelisted domains.
-- \`/whitelist_add <domain>\`: Add a domain to the whitelist. Links from this domain will be allowed.
-  _Example: \`/whitelist_add example.com\`_
-- \`/whitelist_remove <domain>\`: Remove a domain from the whitelist.
-- \`/whitelist_clear\`: Clear all whitelisted domains.
+- <code>/status</code>: Display current Protectron settings for this chat.
+- <code>/antispam</code>: Toggle the general anti-spam filter (on/off).
+- <code>/antispam_mode &lt;mode&gt;</code>: Set anti-spam mode (<i>Simple</i> or <i>Advanced</i>).
+  <i>Example: <code>/antispam_mode Advanced</code></i>
+- <code>/noevents</code>: Toggle filtering of join/leave messages.
+- <code>/nobots</code>: Toggle protection against spam bots.
+- <code>/nolinks</code>: Toggle filtering messages with links, mentions, forwards, reply markup.
+- <code>/noforwards</code>: Toggle filtering forwarded messages.
+- <code>/nocontacts</code>: Toggle filtering messages with contact numbers.
+- <code>/nolocations</code>: Toggle filtering messages with locations.
+- <code>/nocommands</code>: Toggle filtering commands from group members.
+- <code>/nohashtags</code>: Toggle filtering messages with hashtags.
+- <code>/antiflood</code>: Toggle anti-flood protection.
+- <code>/imagefilter</code>: Toggle pornographic image filter.
+- <code>/profanity</code>: Toggle offensive language filter.
+- <code>/blacklist</code>: View blacklisted words.
+- <code>/blacklist_add &lt;word&gt;</code>: Add a word to the blacklist. Messages containing this word will be deleted.
+  <i>Example: <code>/blacklist_add badword</code></i>
+- <code>/blacklist_remove &lt;word&gt;</code>: Remove a word from the blacklist.
+- <code>/blacklist_clear</code>: Clear all blacklisted words.
+- <code>/whitelist</code>: View whitelisted domains.
+- <code>/whitelist_add &lt;domain&gt;</code>: Add a domain to the whitelist. Links from this domain will be allowed.
+  <i>Example: <code>/whitelist_add example.com</code></i>
+- <code>/whitelist_remove &lt;domain&gt;</code>: Remove a domain from the whitelist.
+- <code>/whitelist_clear</code>: Clear all whitelisted domains.
 `;
         } else if (data === 'help_games') {
             responseText = `
-*🎮 Game Commands - Engage and Play! 🎮*
+<b>🎮 Game Commands - Engage and Play! 🎮</b>
 
 Dive into our interactive games! Anyone can initiate these games to have fun with other chat members.
 
-- \`/js\`: Start or join the setup for a Shadow Game.
-  _Example: \`/js\`_
-- \`/s @username\`: In a Shadow Game, tag another player if you are "IT".
-  _Example: \`/s @targetuser\`_
-- \`/cultclash\`: Start a Cult Clash game.
-  _Example: \`/cultclash\`_
-- \`/join_clash\` or \`/join\`: Join an active Cult Clash game during its joining phase.
-  _Example: \`/join_clash\`_
+- <code>/js</code>: Start or join the setup for a Shadow Game.
+  Example: <code>/js</code>
+- <code>/s @username</code>: In a Shadow Game, tag another player if you are "IT".
+  Example: <code>/s @targetuser</code>
+- <code>/cultclash</code>: Start a Cult Clash game.
+  Example: <code>/cultclash</code>
+- <code>/join_clash</code> or <code>/join</code>: Join an active Cult Clash game during its joining phase.
+  Example: <code>/join_clash</code>
 `;
         }
 
         if (responseText) {
-            bot.editMessageText(responseText, {
-                chat_id: chatId,
-                message_id: msg.message_id,
-                parse_mode: 'Markdown',
-                reply_markup: {
-                    inline_keyboard: [
-                        [{ text: 'Back to Help Categories', callback_data: 'help_main' }]
-                    ]
-                }
-            });
+            try { // Added try-catch block here
+                await bot.editMessageText(responseText, {
+                    chat_id: chatId,
+                    message_id: msg.message_id,
+                    parse_mode: 'HTML',
+                    reply_markup: {
+                        inline_keyboard: [
+                            [{ text: 'Back to Help Categories', callback_data: 'help_main' }]
+                        ]
+                    }
+                });
+            } catch (error) {
+                console.error(`Error editing message for help_games callback in chat ${chatId}:`, error);
+                // Optionally, send a new message as a fallback if editing fails
+                // bot.sendMessage(chatId, "Failed to update help message. Here are the game commands:\n" + responseText, { parse_mode: 'Markdown' });
+            }
         } else if (data === 'help_main') {
             // Re-send the main help message with buttons
             const reHelpMessage = `
-*Mr. Yunks Bot Features*
+<b>Mr. Yunks Bot Features</b>
 
-*General Commands:*
-- \`/start\`: Start interacting with the bot.
-- \`/help\`: Shows this help message.
-- \`/prophecy <question>\`: Get a prophecy.
-- \`/leaderboard [number]\`: Display the top XP earners (e.g., /leaderboard 5 to show top 5).
+<b>General Commands:</b>
+- <code>/start</code>: Start interacting with the bot.
+- <code>/help</code>: Shows this help message.
+- <code>/prophecy &lt;question&gt;</code>: Get a prophecy.
+- <code>/leaderboard [number]</code>: Display the top XP earners (e.g., /leaderboard 5 to show top 5).
 - Send a photo to convert it to a sticker.
 `;
             const reInlineKeyboard = [];
@@ -191,7 +197,7 @@ Dive into our interactive games! Anyone can initiate these games to have fun wit
             bot.editMessageText(reHelpMessage, {
                 chat_id: chatId,
                 message_id: msg.message_id,
-                parse_mode: 'Markdown',
+                parse_mode: 'HTML',
                 reply_markup: {
                     inline_keyboard: reInlineKeyboard
                 }
@@ -235,15 +241,15 @@ Dive into our interactive games! Anyone can initiate these games to have fun wit
 
             const progressBar = '█'.repeat(filledBlocks) + '░'.repeat(barLength - filledBlocks);
 
-            let profileMessage = `🌟 *${username}'s Profile* 🌟
+            let profileMessage = `<b>🌟 ${username}'s Profile 🌟</b>
             
-*Level:* ${currentLevel}
-*XP:* ${currentXp}
-*XP for next level (${currentLevel + 1}):* ${xpForNextLevel}
+<b>Level:</b> ${currentLevel}
+<b>XP:</b> ${currentXp}
+<b>XP for next level (${currentLevel + 1}):</b> ${xpForNextLevel}
 
-\`[${progressBar}]\` ${xpIntoCurrentLevel}/${xpNeededForNextLevel} XP to Level ${currentLevel + 1}
+<code>[${progressBar}]</code> ${xpIntoCurrentLevel}/${xpNeededForNextLevel} XP to Level ${currentLevel + 1}
 `;
-            sendRateLimitedMessage(bot, chatId, profileMessage, { parse_mode: 'Markdown' });
+            sendRateLimitedMessage(bot, chatId, profileMessage, { parse_mode: 'HTML' });
 
         } catch (error) {
             console.error("Error fetching user profile:", error);

@@ -9,7 +9,7 @@ function renderShadowGameStatus(chatId) {
     const itPlayer = Object.values(game.players).find(p => p.isIt);
     const statusText = `
 🌑 SHADOW STATUS
-• It: ${itPlayer ? `@${itPlayer.username}` : 'None'}
+• It: ${itPlayer ? `<code>@${itPlayer.username}</code>` : 'None'}
 • Time left: ${game.joinTimeLeft !== null ? `${Math.floor(game.joinTimeLeft / 60)}:${(game.joinTimeLeft % 60).toString().padStart(2, '0')}` : 'N/A'}
 • Players remaining: ${Object.keys(game.players).length}
 • Eliminated: ${game.eliminated.length}
@@ -25,7 +25,7 @@ function renderShadowGameStatus(chatId) {
         };
     }
 
-    return { text: statusText, options: { reply_markup: reply_markup, parse_mode: 'Markdown' } };
+    return { text: statusText, options: { reply_markup: reply_markup, parse_mode: 'HTML' } };
 }
 
 // Function to update and manage the status panel
@@ -118,7 +118,7 @@ function startJoinTimer(chatId, bot) {
             game.round = 1;
             
             const huntMessageText = `👁️ THE HUNT BEGINS
-@${game.players[firstItId].username} is IT
+<code>@${game.players[firstItId].username}</code> is IT
 
 Use /s @username to TAG
 ⏳ Tag timer: 25 seconds`;
@@ -127,17 +127,17 @@ Use /s @username to TAG
                     await bot.editMessageText(huntMessageText, {
                         chat_id: chatId,
                         message_id: game.gameMessageId,
-                        parse_mode: 'Markdown'
+                        parse_mode: 'HTML'
                     });
                     game.lastBotMessageId = game.gameMessageId;
                 } catch (error) {
                     console.error("Error editing hunt message:", error);
-                    const sentMsg = await bot.sendMessage(chatId, huntMessageText, { parse_mode: 'Markdown' });
+                    const sentMsg = await bot.sendMessage(chatId, huntMessageText, { parse_mode: 'HTML' });
                     game.gameMessageId = sentMsg.message_id;
                     game.lastBotMessageId = sentMsg.message_id;
                 }
             } else {
-                const sentMsg = await bot.sendMessage(chatId, huntMessageText, { parse_mode: 'Markdown' });
+                const sentMsg = await bot.sendMessage(chatId, huntMessageText, { parse_mode: 'HTML' });
                 game.gameMessageId = sentMsg.message_id;
                 game.lastBotMessageId = sentMsg.message_id;
             }
@@ -156,7 +156,7 @@ function startTagTimer(chatId, itId, bot) {
     game.tagTimer = setTimeout(async () => { // Made async to await bot.editMessageText
         if (game.players[itId] && game.players[itId].isIt) {
             const itUsername = game.players[itId].username;
-            let messageToEditContent = `☠️ @${itUsername} was swallowed by the darkness for failing to tag in time.`;
+            let messageToEditContent = `☠️ <code>@${itUsername}</code> was swallowed by the darkness for failing to tag in time.`;
 
             game.eliminated.push(itUsername);
             delete game.players[itId];
@@ -166,7 +166,7 @@ function startTagTimer(chatId, itId, bot) {
                 const newItId = playerIds[Math.floor(Math.random() * playerIds.length)];
                 game.players[newItId].isIt = true;
                 game.round++;
-                messageToEditContent += `\n@${game.players[newItId].username} is now IT.
+                messageToEditContent += `\n<code>@${game.players[newItId].username}</code> is now IT.
 ⏳ Tag timer: 25 seconds`;
 
                 if (game.gameMessageId) {
@@ -174,17 +174,17 @@ function startTagTimer(chatId, itId, bot) {
                         await bot.editMessageText(messageToEditContent, {
                             chat_id: chatId,
                             message_id: game.gameMessageId,
-                            parse_mode: 'Markdown'
+                            parse_mode: 'HTML'
                         });
                         game.lastBotMessageId = game.gameMessageId;
                     } catch (error) {
                         console.error("Error editing game message after elimination:", error);
-                        const sentMsg = await bot.sendMessage(chatId, messageToEditContent, { parse_mode: 'Markdown' });
+                        const sentMsg = await bot.sendMessage(chatId, messageToEditContent, { parse_mode: 'HTML' });
                         game.gameMessageId = sentMsg.message_id;
                         game.lastBotMessageId = sentMsg.message_id;
                     }
                 } else {
-                    const sentMsg = await bot.sendMessage(chatId, messageToEditContent, { parse_mode: 'Markdown' });
+                    const sentMsg = await bot.sendMessage(chatId, messageToEditContent, { parse_mode: 'HTML' });
                     game.gameMessageId = sentMsg.message_id;
                     game.lastBotMessageId = sentMsg.message_id;
                 }
@@ -193,24 +193,24 @@ function startTagTimer(chatId, itId, bot) {
             } else if (playerIds.length === 1) {
                 const winnerUsername = game.players[playerIds[0]].username;
                 const winnerMessage = `👑 WINNER OF THE SHADOWS
-@${winnerUsername} stands alone
+<code>@${winnerUsername}</code> stands alone
 🌑 The darkness bows.`;
                 if (game.gameMessageId) {
                     try {
                         await bot.editMessageText(winnerMessage, {
                             chat_id: chatId,
                             message_id: game.gameMessageId,
-                            parse_mode: 'Markdown'
+                            parse_mode: 'HTML'
                         });
                         game.lastBotMessageId = game.gameMessageId;
                     } catch (error) {
                         console.error("Error editing game message for winner:", error);
-                        const sentMsg = await bot.sendMessage(chatId, winnerMessage, { parse_mode: 'Markdown' });
+                        const sentMsg = await bot.sendMessage(chatId, winnerMessage, { parse_mode: 'HTML' });
                         game.gameMessageId = sentMsg.message_id;
                         game.lastBotMessageId = sentMsg.message_id;
                     }
                 } else {
-                    const sentMsg = await bot.sendMessage(chatId, winnerMessage, { parse_mode: 'Markdown' });
+                    const sentMsg = await bot.sendMessage(chatId, winnerMessage, { parse_mode: 'HTML' });
                     game.gameMessageId = sentMsg.message_id;
                     game.lastBotMessageId = sentMsg.message_id;
                 }
@@ -225,17 +225,17 @@ function startTagTimer(chatId, itId, bot) {
                         await bot.editMessageText(gameOverMessage, {
                             chat_id: chatId,
                             message_id: game.gameMessageId,
-                            parse_mode: 'Markdown'
+                            parse_mode: 'HTML'
                         });
                         game.lastBotMessageId = game.gameMessageId;
                     } catch (error) {
                         console.error("Error editing game message for game over:", error);
-                        const sentMsg = await bot.sendMessage(chatId, gameOverMessage, { parse_mode: 'Markdown' });
+                        const sentMsg = await bot.sendMessage(chatId, gameOverMessage, { parse_mode: 'HTML' });
                         game.gameMessageId = sentMsg.message_id;
                         game.lastBotMessageId = sentMsg.message_id;
                     }
                 } else {
-                    const sentMsg = await bot.sendMessage(chatId, gameOverMessage, { parse_mode: 'Markdown' });
+                    const sentMsg = await bot.sendMessage(chatId, gameOverMessage, { parse_mode: 'HTML' });
                     game.gameMessageId = sentMsg.message_id;
                     game.lastBotMessageId = sentMsg.message_id;
                 }
@@ -271,19 +271,20 @@ function registerShadowGameHandlers(bot) {
             gameMessageId: null, // This will be the main persistent game message ID
             lastBotMessageId: null, // This will track the message to be pushed to bottom
         };
+        const game = shadowGames[chatId]; // Declare game variable here and assign the initialized object
 
-        const howToPlayMessage = `🌑 SHADOW GAME - HOW TO PLAY 🌑
+        const howToPlayMessage = `<b>🌑 SHADOW GAME - HOW TO PLAY 🌑</b>
 
-*Objective:* Survive the hunt!
-*Starting the Game:* Use /js to initiate a new game.
-*Joining:* During the joining phase, tap the 'Enter the Shadows' button to join.
-*The Hunt:* One player is randomly chosen as 'IT'. Their goal is to 'tag' another player using the /s @username command within 25 seconds.
-*Elimination:* If 'IT' fails to tag someone in time, they are eliminated.
-*New 'IT':* If 'IT' successfully tags someone, the tagged player becomes the new 'IT', and the timer resets.
-*Winning:* The last player remaining wins!
+<b>Objective:</b> Survive the hunt!
+<b>Starting the Game:</b> Use /js to initiate a new game.
+<b>Joining:</b> During the joining phase, tap the 'Enter the Shadows' button to join.
+<b>The Hunt:</b> One player is randomly chosen as 'IT'. Their goal is to 'tag' another player using the /s @username command within 25 seconds.
+<b>Elimination:</b> If 'IT' fails to tag someone in time, they are eliminated.
+<b>New 'IT':</b> If 'IT' successfully tags someone, the tagged player becomes the new 'IT', and the timer resets.
+<b>Winning:</b> The last player remaining wins!
 
 Good luck, and may the shadows be ever in your favor!`;
-        const sentHowToPlayMessage = await bot.sendMessage(chatId, howToPlayMessage, { parse_mode: 'Markdown' });
+        const sentHowToPlayMessage = await bot.sendMessage(chatId, howToPlayMessage, { parse_mode: 'HTML' });
 
         const opts = {
             reply_markup: {
@@ -316,23 +317,23 @@ Good luck, and may the shadows be ever in your favor!`;
         const taggedPlayer = await getUserByUsername(taggedUsername);
         if (!taggedPlayer || !game.players[taggedPlayer.id]) {
             // Player tagged a non-existent user or a user not in the game
-            const eliminationMessage = `Could not find a player named @${taggedUsername} in this game. ☠️ @${game.players[itId].username} has been removed for tagging an invalid target.`;
+            const eliminationMessage = `Could not find a player named <code>@${taggedUsername}</code> in this game. ☠️ <code>@${game.players[itId].username}</code> has been removed for tagging an invalid target.`;
             if (game.gameMessageId) {
                 try {
                     await bot.editMessageText(eliminationMessage, {
                         chat_id: chatId,
                         message_id: game.gameMessageId,
-                        parse_mode: 'Markdown'
+                        parse_mode: 'HTML'
                     });
                     game.lastBotMessageId = game.gameMessageId;
                 } catch (error) {
                     console.error("Error editing game message for invalid tag:", error);
-                    const sentMsg = await bot.sendMessage(chatId, eliminationMessage, { parse_mode: 'Markdown' });
+                    const sentMsg = await bot.sendMessage(chatId, eliminationMessage, { parse_mode: 'HTML' });
                     game.gameMessageId = sentMsg.message_id;
                     game.lastBotMessageId = sentMsg.message_id;
                 }
             } else {
-                const sentMsg = await bot.sendMessage(chatId, eliminationMessage, { parse_mode: 'Markdown' });
+                const sentMsg = await bot.sendMessage(chatId, eliminationMessage, { parse_mode: 'HTML' });
                 game.gameMessageId = sentMsg.message_id;
                 game.lastBotMessageId = sentMsg.message_id;
             }
@@ -345,23 +346,23 @@ Good luck, and may the shadows be ever in your favor!`;
                 const newItId = playerIds[Math.floor(Math.random() * playerIds.length)];
                 game.players[newItId].isIt = true;
                 game.round++;
-                const newItMessageText = `\n@${game.players[newItId].username} is now IT.`;
+                const newItMessageText = `\n<code>@${game.players[newItId].username}</code> is now IT.`;
                 if (game.gameMessageId) {
                      try {
                         await bot.editMessageText(eliminationMessage + newItMessageText + `\n⏳ Tag timer: 25 seconds`, {
                             chat_id: chatId,
                             message_id: game.gameMessageId,
-                            parse_mode: 'Markdown'
+                            parse_mode: 'HTML'
                         });
                         game.lastBotMessageId = game.gameMessageId;
                     } catch (error) {
                         console.error("Error editing game message for new IT after invalid tag:", error);
-                        const sentMsg = await bot.sendMessage(chatId, newItMessageText, { parse_mode: 'Markdown' });
+                        const sentMsg = await bot.sendMessage(chatId, newItMessageText, { parse_mode: 'HTML' });
                         game.gameMessageId = sentMsg.message_id;
                         game.lastBotMessageId = sentMsg.message_id;
                     }
                 } else {
-                    const sentMsg = await bot.sendMessage(chatId, newItMessageText, { parse_mode: 'Markdown' });
+                    const sentMsg = await bot.sendMessage(chatId, newItMessageText, { parse_mode: 'HTML' });
                     game.gameMessageId = sentMsg.message_id;
                     game.lastBotMessageId = sentMsg.message_id;
                 }
@@ -370,24 +371,24 @@ Good luck, and may the shadows be ever in your favor!`;
             } else if (playerIds.length === 1) {
                 const winnerUsername = game.players[playerIds[0]].username;
                 const winnerMessage = `👑 WINNER OF THE SHADOWS
-@${winnerUsername} stands alone
+<code>@${winnerUsername}</code> stands alone
 🌑 The darkness bows.`;
                 if (game.gameMessageId) {
                     try {
                         await bot.editMessageText(winnerMessage, {
                             chat_id: chatId,
                             message_id: game.gameMessageId,
-                            parse_mode: 'Markdown'
+                            parse_mode: 'HTML'
                         });
                         game.lastBotMessageId = game.gameMessageId;
                     } catch (error) {
                         console.error("Error editing game message for winner after invalid tag:", error);
-                        const sentMsg = await bot.sendMessage(chatId, winnerMessage, { parse_mode: 'Markdown' });
+                        const sentMsg = await bot.sendMessage(chatId, winnerMessage, { parse_mode: 'HTML' });
                         game.gameMessageId = sentMsg.message_id;
                         game.lastBotMessageId = sentMsg.message_id;
                     }
                 } else {
-                    const sentMsg = await bot.sendMessage(chatId, winnerMessage, { parse_mode: 'Markdown' });
+                    const sentMsg = await bot.sendMessage(chatId, winnerMessage, { parse_mode: 'HTML' });
                     game.gameMessageId = sentMsg.message_id;
                     game.lastBotMessageId = sentMsg.message_id;
                 }
@@ -402,17 +403,17 @@ Good luck, and may the shadows be ever in your favor!`;
                         await bot.editMessageText(gameOverMessage, {
                             chat_id: chatId,
                             message_id: game.gameMessageId,
-                            parse_mode: 'Markdown'
+                            parse_mode: 'HTML'
                         });
                         game.lastBotMessageId = game.gameMessageId;
                     } catch (error) {
                         console.error("Error editing game message for game over after invalid tag:", error);
-                        const sentMsg = await bot.sendMessage(chatId, gameOverMessage, { parse_mode: 'Markdown' });
+                        const sentMsg = await bot.sendMessage(chatId, gameOverMessage, { parse_mode: 'HTML' });
                         game.gameMessageId = sentMsg.message_id;
                         game.lastBotMessageId = sentMsg.message_id;
                     }
                 } else {
-                    const sentMsg = await bot.sendMessage(chatId, gameOverMessage, { parse_mode: 'Markdown' });
+                    const sentMsg = await bot.sendMessage(chatId, gameOverMessage, { parse_mode: 'HTML' });
                     game.gameMessageId = sentMsg.message_id;
                     game.lastBotMessageId = sentMsg.message_id;
                 }
@@ -434,8 +435,8 @@ Good luck, and may the shadows be ever in your favor!`;
         game.round++;
 
         const tagMessage = `🕶️ SHADOWED
-@${game.players[itId].username} tagged @${taggedUsername}
-@${taggedUsername} is IT
+<code>@${game.players[itId].username}</code> tagged <code>@${taggedUsername}</code>
+<code>@${taggedUsername}</code> is IT
 ⏳ Timer reset to 25 seconds`;
 
         if (game.gameMessageId) {
@@ -443,17 +444,17 @@ Good luck, and may the shadows be ever in your favor!`;
                 await bot.editMessageText(tagMessage, {
                     chat_id: chatId,
                     message_id: game.gameMessageId,
-                    parse_mode: 'Markdown'
+                    parse_mode: 'HTML'
                 });
                 game.lastBotMessageId = game.gameMessageId;
             } catch (error) {
                 console.error("Error editing game message after tag:", error);
-                const sentMsg = await bot.sendMessage(chatId, tagMessage, { parse_mode: 'Markdown' });
+                const sentMsg = await bot.sendMessage(chatId, tagMessage, { parse_mode: 'HTML' });
                 game.gameMessageId = sentMsg.message_id;
                 game.lastBotMessageId = sentMsg.message_id;
             }
         } else {
-            const sentMsg = await bot.sendMessage(chatId, tagMessage, { parse_mode: 'Markdown' });
+            const sentMsg = await bot.sendMessage(chatId, tagMessage, { parse_mode: 'HTML' });
             game.gameMessageId = sentMsg.message_id;
             game.lastBotMessageId = sentMsg.message_id;
         }
@@ -515,13 +516,13 @@ Tap to enter…
 Tap to enter…
 ⏳ Time left: ${Math.floor(game.joinTimeLeft / 60)}:${(game.joinTimeLeft % 60).toString().padStart(2, '0')} minutes
 
-_Joined Players: ${Object.values(game.players).map(p => `@${p.username}`).join(', ')}_`, {
+<i>Joined Players: ${Object.values(game.players).map(p => `<code>@${p.username}</code>`).join(', ')}</i>`, {
                         chat_id: chatId,
                         message_id: game.joinMessageId,
                         reply_markup: {
                             inline_keyboard: [[{ text: '🕶️ Enter the Shadows', callback_data: 'sg_join' }]]
                         },
-                        parse_mode: 'Markdown'
+                        parse_mode: 'HTML'
                     })).text;
                     game.lastBotMessageId = game.joinMessageId;
                 } catch (error) {

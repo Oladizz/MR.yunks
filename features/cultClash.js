@@ -7,11 +7,11 @@ function renderCultClashStatus(chatId) {
     const game = cultClashGames[chatId];
     if (!game) return { text: null, options: null };
 
-    let statusMessage = `🔥 *Cult Clash is in progress!* 🔥\n`;
+    let statusMessage = `🔥 <b>Cult Clash is in progress!</b> 🔥\n`;
 
     if (game.isJoiningPhase) {
-        statusMessage += `\n*Joining Phase:* Active (Ends in approx. ${Math.ceil(game.joinTimeLeft / 1000)}s)\n`;
-        statusMessage += `*Players Joined:* ${Object.keys(game.players).length > 0 ? Object.values(game.players).map(p => `@${p}`).join(', ') : 'None yet.'}`;
+        statusMessage += `\n<b>Joining Phase:</b> Active (Ends in approx. ${Math.ceil(game.joinTimeLeft / 1000)}s)\n`;
+        statusMessage += `<b>Players Joined:</b> ${Object.keys(game.players).length > 0 ? Object.values(game.players).map(p => `<code>@${p}</code>`).join(', ') : 'None yet.'}`;
         
         return {
             text: statusMessage,
@@ -19,18 +19,18 @@ function renderCultClashStatus(chatId) {
                 reply_markup: {
                     inline_keyboard: [[{ text: '⚔️ Join the Clash', callback_data: 'cc_join' }]]
                 },
-                parse_mode: 'Markdown'
+                parse_mode: 'HTML'
             }
         };
     } else {
-        statusMessage += `\n*Round:* ${game.round || 1}\n`;
-        statusMessage += `*Players Remaining:* ${Object.keys(game.players).length > 0 ? Object.values(game.players).map(p => `@${p}`).join(', ') : 'None'}\n`;
+        statusMessage += `\n<b>Round:</b> ${game.round || 1}\n`;
+        statusMessage += `<b>Players Remaining:</b> ${Object.keys(game.players).length > 0 ? Object.values(game.players).map(p => `<code>@${p}</code>`).join(', ') : 'None'}\n`;
         if (game.eliminated.length > 0) {
-            statusMessage += `*Eliminated:* ${game.eliminated.map(u => `@${u}`).join(', ')}\n`;
+            statusMessage += `<b>Eliminated:</b> ${game.eliminated.map(u => `<code>@${u}</code>`).join(', ')}\n`;
         }
     }
 
-    return { text: statusMessage, options: { parse_mode: 'Markdown' } };
+    return { text: statusMessage, options: { parse_mode: 'HTML' } };
 }
 
 
@@ -42,7 +42,7 @@ async function startElimination(chatId, bot) {
         if (players.length <= 3) {
             clearInterval(eliminationInterval);
             const winnerIds = players;
-            const winners = winnerIds.map(id => `@${game.players[id]}`).join(', ');
+            const winners = winnerIds.map(id => `<code>@${game.players[id]}</code>`).join(', ');
             
             winnerIds.forEach(id => addPoints(id, 20));
 
@@ -53,17 +53,17 @@ async function startElimination(chatId, bot) {
                     await bot.editMessageText(winnerMessage, {
                         chat_id: chatId,
                         message_id: game.gameMessageId,
-                        parse_mode: 'Markdown'
+                        parse_mode: 'HTML'
                     });
                     game.lastBotMessageId = game.gameMessageId; // Update lastBotMessageId
                 } catch (error) {
                     console.error("Error editing winner message in Cult Clash:", error);
-                    const sentMsg = await bot.sendMessage(chatId, winnerMessage, { parse_mode: 'Markdown' });
+                    const sentMsg = await bot.sendMessage(chatId, winnerMessage, { parse_mode: 'HTML' });
                     game.gameMessageId = sentMsg.message_id; // Update gameMessageId on fallback
                     game.lastBotMessageId = sentMsg.message_id; // Update lastBotMessageId
                 }
             } else {
-                const sentMsg = await bot.sendMessage(chatId, winnerMessage, { parse_mode: 'Markdown' });
+                const sentMsg = await bot.sendMessage(chatId, winnerMessage, { parse_mode: 'HTML' });
                 game.gameMessageId = sentMsg.message_id; // Update gameMessageId on fallback
                 game.lastBotMessageId = sentMsg.message_id; // Update lastBotMessageId
             }
@@ -78,9 +78,9 @@ async function startElimination(chatId, bot) {
         const eliminatedId = players[eliminatedIndex];
         const eliminatedUsername = game.players[eliminatedId];
         const eliminationMessages = [
-            `@${eliminatedUsername} slipped off! ❌`,
-            `@${eliminatedUsername} just got vaporized! 💨`,
-            `The spirits have claimed @${eliminatedUsername}! 💀`,
+            `<code>@${eliminatedUsername}</code> slipped off! ❌`,
+            `<code>@${eliminatedUsername}</code> just got vaporized! 💨`,
+            `The spirits have claimed <code>@${eliminatedUsername}</code>! 💀`,
         ];
         const randomMessage = eliminationMessages[Math.floor(Math.random() * eliminationMessages.length)];
         
@@ -91,17 +91,17 @@ async function startElimination(chatId, bot) {
                 await bot.editMessageText(game.currentMessageText, {
                     chat_id: chatId,
                     message_id: game.gameMessageId,
-                    parse_mode: 'Markdown'
+                    parse_mode: 'HTML'
                 });
                 game.lastBotMessageId = game.gameMessageId; // Update lastBotMessageId
             } catch (error) {
                 console.error("Error editing elimination message in Cult Clash:", error);
-                const sentMsg = await bot.sendMessage(chatId, game.currentMessageText, { parse_mode: 'Markdown' });
+                const sentMsg = await bot.sendMessage(chatId, game.currentMessageText, { parse_mode: 'HTML' });
                 game.gameMessageId = sentMsg.message_id; // Update gameMessageId on fallback
                 game.lastBotMessageId = sentMsg.message_id; // Update lastBotMessageId
             }
         } else {
-            const sentMsg = await bot.sendMessage(chatId, game.currentMessageText, { parse_mode: 'Markdown' });
+            const sentMsg = await bot.sendMessage(chatId, game.currentMessageText, { parse_mode: 'HTML' });
             game.gameMessageId = sentMsg.message_id; // Update gameMessageId on fallback
             game.lastBotMessageId = sentMsg.message_id; // Update lastBotMessageId
         }
@@ -132,17 +132,24 @@ function registerCultClashHandlers(bot) {
             lastBotMessageId: null, // New property to track the latest bot message for "push to bottom"
         };
 
-        const initialMessageText = `🔥 A Cult Clash is about to begin! 🔥
+        const initialMessageText = `🔥 <b>A Cult Clash is about to begin!</b> 🔥
 
-*How to Play:*
-1. All participants have 30 seconds to join the game using the /join_clash command.
+<b>How to Play:</b>
+1. All participants have 30 seconds to join the game.
 2. Once the joining phase ends, players will be randomly eliminated one by one.
 3. The last 3 players remaining will be declared the winners!
 4. Winners will receive 20 Yunk points each.
 
-You have 30 seconds to join the fight. Type /join_clash to enter!`;
+You have 30 seconds to join the fight!`;
 
-        const sentMessage = await bot.sendMessage(chatId, initialMessageText, { parse_mode: 'Markdown' });
+        const sentMessage = await bot.sendMessage(chatId, initialMessageText, {
+            parse_mode: 'HTML',
+            reply_markup: {
+                inline_keyboard: [
+                    [{ text: '⚔️ Join the Clash', callback_data: 'cc_join' }]
+                ]
+            }
+        });
         cultClashGames[chatId].gameMessageId = sentMessage.message_id;
         cultClashGames[chatId].currentMessageText = initialMessageText; // Initialize current message text
         cultClashGames[chatId].lastBotMessageId = sentMessage.message_id; // Set lastBotMessageId initially
@@ -167,17 +174,17 @@ You have 30 seconds to join the fight. Type /join_clash to enter!`;
                         await bot.editMessageText(cultClashGames[chatId].currentMessageText, {
                             chat_id: chatId,
                             message_id: cultClashGames[chatId].gameMessageId,
-                            parse_mode: 'Markdown'
+                            parse_mode: 'HTML'
                         });
                         cultClashGames[chatId].lastBotMessageId = cultClashGames[chatId].gameMessageId; // Update lastBotMessageId
                     } catch (error) {
                         console.error("Error editing message to end joining phase in Cult Clash:", error);
-                        const sentMsg = await bot.sendMessage(chatId, cultClashGames[chatId].currentMessageText, { parse_mode: 'Markdown' });
+                        const sentMsg = await bot.sendMessage(chatId, cultClashGames[chatId].currentMessageText, { parse_mode: 'HTML' });
                         cultClashGames[chatId].gameMessageId = sentMsg.message_id; // Update gameMessageId on fallback
                         cultClashGames[chatId].lastBotMessageId = sentMsg.message_id; // Update lastBotMessageId
                     }
-                } else {
-                    const sentMsg = await bot.sendMessage(chatId, cultClashGames[chatId].currentMessageText, { parse_mode: 'Markdown' });
+                } else if (cultClashGames[chatId]) { // Check if game exists before sending a new message
+                    const sentMsg = await bot.sendMessage(chatId, cultClashGames[chatId].currentMessageText, { parse_mode: 'HTML' });
                     cultClashGames[chatId].gameMessageId = sentMsg.message_id; // Update gameMessageId on fallback
                     cultClashGames[chatId].lastBotMessageId = sentMsg.message_id; // Update lastBotMessageId
                 }
@@ -186,7 +193,7 @@ You have 30 seconds to join the fight. Type /join_clash to enter!`;
     });
 
     /**
-     * The Cult Clash Game - Joining.
+     * The Cult Clash Game - Joining (via text command).
      */
     bot.onText(/\/join_clash|\/join/, async (msg) => { // Made async
         const chatId = msg.chat.id;
@@ -203,31 +210,77 @@ You have 30 seconds to join the fight. Type /join_clash to enter!`;
             return;
         }
         if (game.players[userId]) {
-            bot.sendMessage(chatId, `@${username}, you are already in the clash.`);
+            bot.sendMessage(chatId, `<code>@${username}</code>, you are already in the clash.`);
             return;
         }
+        game.currentMessageText = `${game.currentMessageText}\n👤 <code>@${username}</code> has joined the Cult Clash!`;        if (game.gameMessageId) {
+            try {
+                await bot.editMessageText(game.currentMessageText, {
+                    chat_id: chatId,
+                    message_id: game.gameMessageId,
+                    parse_mode: 'HTML',
+                    reply_markup: { // Keep the button visible
+                        inline_keyboard: [[{ text: '⚔️ Join the Clash', callback_data: 'cc_join' }]]
+                    }
+                });
+                game.lastBotMessageId = game.gameMessageId;
+            } catch (error) {
+                console.error("Error editing join message in Cult Clash:", error);
+                // Fallback handled by gameMessageInterceptor
+            }
+        }
+    });
+
+    /**
+     * The Cult Clash Game - Joining (via button).
+     */
+    bot.on('callback_query', async (callbackQuery) => {
+        const msg = callbackQuery.message;
+        const chatId = msg.chat.id;
+        const data = callbackQuery.data;
+
+        if (data !== 'cc_join') {
+            return; // Not for this handler
+        }
+
+        const game = cultClashGames[chatId];
+        const userId = callbackQuery.from.id;
+        const username = callbackQuery.from.username || `${callbackQuery.from.first_name} ${callbackQuery.from.last_name || ''}`.trim();
+
+        if (!game || !game.isGameRunning) {
+            bot.answerCallbackQuery(callbackQuery.id, { text: "There is no Cult Clash game to join." });
+            return;
+        }
+        if (!game.isJoiningPhase) {
+            bot.answerCallbackQuery(callbackQuery.id, { text: "The joining phase for the Cult Clash is over." });
+            return;
+        }
+        if (game.players[userId]) {
+            bot.answerCallbackQuery(callbackQuery.id, { text: "You are already in the clash." });
+            return;
+        }
+
         game.players[userId] = username;
+
+        bot.answerCallbackQuery(callbackQuery.id, { text: "You have joined the clash!" });
         
-        // Edit the main game message to append the join message
-        game.currentMessageText = `${game.currentMessageText}\n👤 @${username} has joined the Cult Clash!`;
+        game.currentMessageText = `${game.currentMessageText}\n👤 <code>@${username}</code> has joined the Cult Clash!`;
         if (game.gameMessageId) {
             try {
                 await bot.editMessageText(game.currentMessageText, {
                     chat_id: chatId,
                     message_id: game.gameMessageId,
-                    parse_mode: 'Markdown'
+                    parse_mode: 'HTML',
+                    reply_markup: { // Keep the button visible
+                        inline_keyboard: [[{ text: '⚔️ Join the Clash', callback_data: 'cc_join' }]]
+                    }
                 });
-                game.lastBotMessageId = game.gameMessageId; // Update lastBotMessageId
+                game.lastBotMessageId = game.gameMessageId;
             } catch (error) {
-                console.error("Error editing join message in Cult Clash:", error);
-                const sentMsg = await bot.sendMessage(chatId, game.currentMessageText, { parse_mode: 'Markdown' }); // Fallback
-                game.gameMessageId = sentMsg.message_id; // Update gameMessageId on fallback
-                game.lastBotMessageId = sentMsg.message_id; // Update lastBotMessageId
+                if (!error.message.includes('message is not modified')) {
+                     console.error("Error editing join message in Cult Clash (callback):", error);
+                }
             }
-        } else {
-            const sentMsg = await bot.sendMessage(chatId, game.currentMessageText, { parse_mode: 'Markdown' }); // Fallback
-            game.gameMessageId = sentMsg.message_id; // Update gameMessageId on fallback
-            game.lastBotMessageId = sentMsg.message_id; // Update lastBotMessageId
         }
     });
 }
