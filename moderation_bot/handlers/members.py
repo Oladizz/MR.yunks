@@ -5,10 +5,10 @@ import structlog
 
 logger = structlog.get_logger(__name__)
 
-def _extract_status_change(chat_member_update):
+async def _extract_status_change(chat_member_update):
     """Takes a ChatMemberUpdated instance and extracts whether the user was added
     and if they are a new member."""
-    status_change = chat_member_update.difference().get("status")
+    status_change = (await chat_member_update.difference()).get("status")
     if status_change is None:
         return None, None
 
@@ -20,7 +20,7 @@ def _extract_status_change(chat_member_update):
 
 async def welcome_new_member(update: Update, context: CallbackContext) -> None:
     """Greets new users when they join the chat and displays a welcome message."""
-    result = _extract_status_change(update.chat_member)
+    result = await _extract_status_change(update.chat_member)
     if result is None:
         return
 

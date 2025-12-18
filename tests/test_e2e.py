@@ -2,8 +2,8 @@ import pytest
 import asyncio
 from unittest.mock import AsyncMock
 
-from ..bot import start
-from ..handlers.moderation import ban_user
+from moderation_bot.main import start
+from moderation_bot.handlers.moderation import ban_user
 
 @pytest.mark.asyncio
 async def test_start_command_e2e():
@@ -29,7 +29,7 @@ async def test_ban_command_e2e_non_admin():
     
     # We have to patch the _is_user_admin check inside the moderation handler
     from unittest.mock import patch
-    with patch('handlers.moderation._is_user_admin', new=AsyncMock(return_value=False)):
+    with patch('moderation_bot.handlers.moderation._is_user_admin', new=AsyncMock(return_value=False)):
         await ban_user(update, context)
 
     # Check that the bot correctly replies with an admin-only message

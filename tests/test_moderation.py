@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from ..handlers.moderation import warn_user, kick_user, ban_user, unban_user
+from moderation_bot.handlers.moderation import warn_user, kick_user, ban_user, unban_user
 
 # --- Tests for /warn ---
 
@@ -14,7 +14,7 @@ async def test_warn_user_as_admin():
     update.message.reply_to_message.from_user = warned_user
     context.args = ["for", "spamming"]
 
-    with patch('handlers.moderation._is_user_admin', new=AsyncMock(return_value=True)):
+    with patch('moderation_bot.handlers.moderation._is_user_admin', new=AsyncMock(return_value=True)):
         await warn_user(update, context)
         update.message.reply_html.assert_called_once()
         call_args, _ = update.message.reply_html.call_args
@@ -24,7 +24,7 @@ async def test_warn_user_as_admin():
 async def test_warn_user_as_non_admin():
     update = AsyncMock()
     context = AsyncMock()
-    with patch('handlers.moderation._is_user_admin', new=AsyncMock(return_value=False)):
+    with patch('moderation_bot.handlers.moderation._is_user_admin', new=AsyncMock(return_value=False)):
         await warn_user(update, context)
         update.message.reply_text.assert_called_once_with("This command can only be used by admins.")
 
@@ -38,7 +38,7 @@ async def test_kick_user_as_admin():
     kicked_user.mention_html.return_value = "KickedUser"
     update.message.reply_to_message.from_user = kicked_user
 
-    with patch('handlers.moderation._is_user_admin', new=AsyncMock(return_value=True)):
+    with patch('moderation_bot.handlers.moderation._is_user_admin', new=AsyncMock(return_value=True)):
         await kick_user(update, context)
         context.bot.kick_chat_member.assert_called_once_with(update.effective_chat.id, kicked_user.id)
 
@@ -52,7 +52,7 @@ async def test_ban_user_as_admin():
     banned_user.mention_html.return_value = "BannedUser"
     update.message.reply_to_message.from_user = banned_user
 
-    with patch('handlers.moderation._is_user_admin', new=AsyncMock(return_value=True)):
+    with patch('moderation_bot.handlers.moderation._is_user_admin', new=AsyncMock(return_value=True)):
         await ban_user(update, context)
         context.bot.ban_chat_member.assert_called_once_with(update.effective_chat.id, banned_user.id)
 
@@ -64,7 +64,7 @@ async def test_unban_user_as_admin():
     context = AsyncMock()
     context.args = ["12345"]
 
-    with patch('handlers.moderation._is_user_admin', new=AsyncMock(return_value=True)):
+    with patch('moderation_bot.handlers.moderation._is_user_admin', new=AsyncMock(return_value=True)):
         await unban_user(update, context)
         context.bot.unban_chat_member.assert_called_once_with(update.effective_chat.id, 12345)
         update.message.reply_text.assert_called_once_with("✅ User 12345 has been unbanned.")
@@ -75,6 +75,6 @@ async def test_unban_user_without_id():
     context = AsyncMock()
     context.args = []
 
-    with patch('handlers.moderation._is_user_admin', new=AsyncMock(return_value=True)):
+    with patch('moderation_bot.handlers.moderation._is_user_admin', new=AsyncMock(return_value=True)):
         await unban_user(update, context)
         update.message.reply_text.assert_called_once_with("Please provide a valid user ID to unban. Usage: /unban <user_id>")

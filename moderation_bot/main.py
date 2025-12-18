@@ -1,16 +1,31 @@
 import os
 import asyncio
 from dotenv import load_dotenv
-from telegram.ext import Application, CommandHandler, ChatMemberHandler
+from telegram.ext import Application, CommandHandler, ChatMemberHandler, CallbackContext
 import structlog
 
 # ... (logging configuration) ...
 logger = structlog.get_logger()
 
-from .handlers.moderation import warn_user, kick_user, ban_user, unban_user
-from .handlers.members import welcome_new_member
+from moderation_bot.handlers.moderation import warn_user, kick_user, ban_user, unban_user
+from moderation_bot.handlers.members import welcome_new_member
 
-# ... (start function) ...
+async def error_handler(update: object, context: CallbackContext) -> None:
+    """Log the error and handle flood control."""
+    if isinstance(context.error, telegram.error.RetryAfter):
+        logger.warning(
+            "Flood control exceeded. Suggested retry in %s seconds. Pausing...",
+            context.error.retry_after,
+            update=update
+        )
+        await asyncio.sleep(context.error.retry_after)
+        return
+    
+    logger.error("Exception while handling an update:", exc_info=context.error)
+
+async def start(update, context):
+    """Sends a welcome message when the /start command is issued."""
+    await update.message.reply_text("Moderation bot started. Add me to a group to begin.")
 
 def main() -> None:
     """Start the bot."""
@@ -28,6 +43,9 @@ def main() -> None:
         return
     # Create the Application
     application = Application.builder().token(token).build()
+
+    # Register the error handler
+    application.add_error_handler(error_handler)
 
     # Register command handlers
     application.add_handler(CommandHandler("start", start))

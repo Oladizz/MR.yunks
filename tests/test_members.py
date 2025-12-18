@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 from telegram.constants import ChatMemberStatus
 
-from ..handlers.members import welcome_new_member
+from moderation_bot.handlers.members import welcome_new_member
 
 @pytest.mark.asyncio
 async def test_welcome_new_member():
