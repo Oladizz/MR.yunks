@@ -5,12 +5,9 @@ import structlog
 
 logger = structlog.get_logger(__name__)
 
-# In a real bot, admin IDs would be managed more robustly (e.g., from a database or chat-specific settings)
-# For now, we use an environment variable for simplicity.
-ADMIN_USER_IDS = [int(i) for i in os.getenv("ADMIN_USER_IDS", "").split(',') if i]
-
 async def _is_user_admin(update: Update, context: CallbackContext) -> bool:
     """Helper function to check if the user is a chat admin or a bot admin."""
+    ADMIN_USER_IDS = [int(i) for i in os.getenv("ADMIN_USER_IDS", "").split(',') if i]
     user_id = update.effective_user.id
     if user_id in ADMIN_USER_IDS:
         return True
@@ -104,6 +101,52 @@ async def unban_user(update: Update, context: CallbackContext) -> None:
     except Exception as e:
         logger.error("Failed to unban user", error=e)
         await update.message.reply_text(f"Failed to unban user. Reason: {e}")
+
+async def set_welcome_message(update: Update, context: CallbackContext) -> None:
+    """Allows admins to set a custom welcome message for the chat."""
+    if not await _is_user_admin(update, context):
+        await update.message.reply_text("This command can only be used by admins.")
+        return
+
+    if not context.args:
+        await update.message.reply_text("Please provide the welcome message text. Usage: /setwelcome <message>")
+        await update.message.reply_text("Available placeholders: {username} (new member's username/first name)")
+        return
+
+    welcome_message = " ".join(context.args)
+    chat_id = update.effective_chat.id
+    
+    context.chat_data['welcome_message'] = welcome_message
+    await update.message.reply_html(f"✅ Welcome message for this chat set to:\n<code>{welcome_message}</code>")
+
+async def announce_command(update: Update, context: CallbackContext) -> None:
+    """Allows bot admins to send an announcement to the target chat."""
+    ADMIN_USER_IDS = [int(i) for i in os.getenv("ADMIN_USER_IDS", "").split(',') if i]
+    user_id = update.effective_user.id
+    if user_id not in ADMIN_USER_IDS:
+        await update.message.reply_text("This command can only be used by bot administrators in a private message.")
+        return
+
+    target_chat_id = os.getenv("TARGET_CHAT_ID") # Moved this line inside the function
+
+    if not context.args:
+        await update.message.reply_text("Please provide the announcement text. Usage: /announce <message>")
+        return
+
+    announcement_text = " ".join(context.args) # Original definition of announcement_text
+    
+    if not target_chat_id:
+        await update.message.reply_text("❌ TARGET_CHAT_ID is not configured. The announcement was not sent.")
+        logger.error("Attempted to announce but TARGET_CHAT_ID is not set.")
+        return
+
+    try:
+        await context.bot.send_message(chat_id=target_chat_id, text=announcement_text)
+        await update.message.reply_text(f"✅ Announcement sent to chat ID {target_chat_id}.")
+        logger.info("Announcement sent", admin=user_id, chat_id=target_chat_id, message=announcement_text)
+    except Exception as e:
+        logger.error("Failed to send announcement", error=e, chat_id=target_chat_id)
+        await update.message.reply_text(f"❌ Failed to send announcement. Reason: {e}")
 
 
 

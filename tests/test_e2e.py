@@ -6,18 +6,24 @@ from moderation_bot.main import start
 from moderation_bot.handlers.moderation import ban_user
 
 @pytest.mark.asyncio
-async def test_start_command_e2e():
+async def test_start_command_e2e_dm():
     """
-    E2E-like test for the /start command.
+    E2E-like test for the /start command in a DM.
     """
     update = AsyncMock()
     context = AsyncMock()
+    update.effective_chat.type = "private"
     
     await start(update, context)
     
-    update.message.reply_text.assert_awaited_once_with(
-        "Moderation bot started. Add me to a group to begin."
+    expected_message = (
+        "<b>Welcome to the Mr. Yunks Moderation Bot!</b>\n\n"
+        "I am here to help you moderate your Telegram groups.\n"
+        "To get started, add me to your group and make me an administrator.\n\n"
+        "Use the /help command to see a full list of my capabilities and how to use them.\n\n"
+        "For bot administrators, you can use commands like /announce directly in this private chat."
     )
+    update.message.reply_html.assert_called_once_with(expected_message)
 
 @pytest.mark.asyncio
 async def test_ban_command_e2e_non_admin():

@@ -5,10 +5,10 @@ import structlog
 
 logger = structlog.get_logger(__name__)
 
-async def _extract_status_change(chat_member_update):
+def _extract_status_change(chat_member_update):
     """Takes a ChatMemberUpdated instance and extracts whether the user was added
     and if they are a new member."""
-    status_change = (await chat_member_update.difference()).get("status")
+    status_change = chat_member_update.difference().get("status")
     if status_change is None:
         return None, None
 
@@ -20,7 +20,7 @@ async def _extract_status_change(chat_member_update):
 
 async def welcome_new_member(update: Update, context: CallbackContext) -> None:
     """Greets new users when they join the chat and displays a welcome message."""
-    result = await _extract_status_change(update.chat_member)
+    result = _extract_status_change(update.chat_member)
     if result is None:
         return
 
@@ -28,6 +28,18 @@ async def welcome_new_member(update: Update, context: CallbackContext) -> None:
 
     if not was_member and is_member:
         new_member = update.chat_member.new_chat_member.user
-        welcome_message = f"Welcome to the group, {new_member.mention_html()}!"
-        await update.effective_chat.send_message(welcome_message, parse_mode='HTML')
+        
+        custom_welcome_message = context.chat_data.get('welcome_message')
+        if custom_welcome_message:
+            # Replace placeholder if present
+            welcome_text = custom_welcome_message.format(username=new_member.mention_html())
+        else:
+            # Default welcome message (adapted from Node.js bot)
+            welcome_text = (
+                f"Yoh-koh-so, {new_member.mention_html()}! ☠️\n\n"
+                "Cult’s runes have spoken, the spirits nods rituals initiated\n\n"
+                "Prove your devotion… the Cult watches. 👁️"
+            )
+            
+        await update.effective_chat.send_message(welcome_text, parse_mode='HTML')
         logger.info("Welcomed new member", user_id=new_member.id, chat_id=update.effective_chat.id)

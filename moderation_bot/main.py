@@ -1,14 +1,28 @@
 import os
 import asyncio
 from dotenv import load_dotenv
-from telegram.ext import Application, CommandHandler, ChatMemberHandler, CallbackContext
+from telegram.ext import Application, CommandHandler, ChatMemberHandler, MessageHandler, CallbackContext
+import telegram
 import structlog
 
-# ... (logging configuration) ...
+# Initialize logging
+structlog.configure(
+    processors=[
+        structlog.processors.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.JSONRenderer(),
+    ],
+    logger_factory=structlog.PrintLoggerFactory(),
+)
 logger = structlog.get_logger()
 
-from moderation_bot.handlers.moderation import warn_user, kick_user, ban_user, unban_user
+# Import handlers
+from moderation_bot.handlers.moderation import warn_user, kick_user, ban_user, unban_user, set_welcome_message, announce_command
 from moderation_bot.handlers.members import welcome_new_member
+from moderation_bot.handlers.help import help_command
+from moderation_bot.handlers.activity import track_activity, top_command
+from moderation_bot.handlers.spam import block_other_bots, toggle_nobots
+from telegram.ext import filters
 
 async def error_handler(update: object, context: CallbackContext) -> None:
     """Log the error and handle flood control."""
@@ -24,15 +38,25 @@ async def error_handler(update: object, context: CallbackContext) -> None:
     logger.error("Exception while handling an update:", exc_info=context.error)
 
 async def start(update, context):
-    """Sends a welcome message when the /start command is issued."""
-    await update.message.reply_text("Moderation bot started. Add me to a group to begin.")
+    """Sends a descriptive welcome message in DMs, or a brief one in groups."""
+    chat_type = update.effective_chat.type
+    if chat_type == "private":
+        start_message = (
+            "<b>Welcome to the Mr. Yunks Moderation Bot!</b>\n\n"
+            "I am here to help you moderate your Telegram groups.\n"
+            "To get started, add me to your group and make me an administrator.\n\n"
+            "Use the /help command to see a full list of my capabilities and how to use them.\n\n"
+            "For bot administrators, you can use commands like /announce directly in this private chat."
+        )
+        await update.message.reply_html(start_message)
+    else:
+        await update.message.reply_text("Moderation bot started. Add me to a group to begin.")
 
 def main() -> None:
     """Start the bot."""
     logger.info("Starting moderation bot...")
 
     # Load environment variables
-    # Explicitly define the path to the .env file
     script_dir = os.path.dirname(__file__)
     dotenv_path = os.path.join(script_dir, '..', '.env')
     load_dotenv(dotenv_path)
@@ -41,6 +65,7 @@ def main() -> None:
     if not token:
         logger.error("TELEGRAM_TOKEN not found in environment variables!")
         return
+
     # Create the Application
     application = Application.builder().token(token).build()
 
@@ -49,10 +74,19 @@ def main() -> None:
 
     # Register command handlers
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("warn", warn_user))
     application.add_handler(CommandHandler("kick", kick_user))
     application.add_handler(CommandHandler("ban", ban_user))
     application.add_handler(CommandHandler("unban", unban_user))
+    application.add_handler(CommandHandler("setwelcome", set_welcome_message))
+    application.add_handler(CommandHandler("top", top_command))
+    application.add_handler(CommandHandler("announce", announce_command))
+    application.add_handler(CommandHandler("nobots", toggle_nobots))
+
+    # Register message handlers
+    application.add_handler(MessageHandler(filters.ALL, block_other_bots), group=1)
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, track_activity), group=2)
 
     # Register member update handler
     application.add_handler(ChatMemberHandler(welcome_new_member, ChatMemberHandler.CHAT_MEMBER))
