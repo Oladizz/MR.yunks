@@ -92,8 +92,20 @@ def main() -> None:
     application.add_handler(ChatMemberHandler(welcome_new_member, ChatMemberHandler.CHAT_MEMBER))
 
     # Run the bot
-    logger.info("Bot is starting with polling...")
-    application.run_polling()
+    webhook_url = os.getenv("WEBHOOK_URL")
+    port = int(os.getenv("PORT", "8000")) # Default to 8000 if PORT is not set
+
+    if webhook_url:
+        application.run_webhook(
+            listen="0.0.0.0",
+            port=port,
+            url_path=token, # Telegram Bot API expects just the token as path
+            webhook_url=f"{webhook_url}/{token}" # Full URL for Telegram to send updates
+        )
+        logger.info(f"Bot is starting with webhook on port {port}...", webhook_url=webhook_url)
+    else:
+        logger.info("Bot is starting with polling...")
+        application.run_polling()
 
     logger.info("Bot has stopped.")
 
