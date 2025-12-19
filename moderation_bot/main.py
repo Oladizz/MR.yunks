@@ -17,11 +17,11 @@ structlog.configure(
 logger = structlog.get_logger()
 
 # Import handlers
-from moderation_bot.handlers.moderation import warn_user, kick_user, ban_user, unban_user, set_welcome_message, announce_command
+from moderation_bot.handlers.moderation import warn_user, kick_user, ban_user, unban_user, set_welcome_message, announce_command, toggle_cleanlinked
 from moderation_bot.handlers.members import welcome_new_member
 from moderation_bot.handlers.help import help_command
 from moderation_bot.handlers.activity import track_activity, top_command
-from moderation_bot.handlers.spam import block_other_bots, toggle_nobots
+from moderation_bot.handlers.spam import block_other_bots, toggle_nobots, clean_linked_channel_messages
 from telegram.ext import filters
 
 async def error_handler(update: object, context: CallbackContext) -> None:
@@ -83,8 +83,10 @@ def main() -> None:
     application.add_handler(CommandHandler("top", top_command))
     application.add_handler(CommandHandler("announce", announce_command))
     application.add_handler(CommandHandler("nobots", toggle_nobots))
+    application.add_handler(CommandHandler("cleanlinked", toggle_cleanlinked))
 
     # Register message handlers
+    application.add_handler(MessageHandler(filters.ALL, clean_linked_channel_messages), group=0)
     application.add_handler(MessageHandler(filters.ALL, block_other_bots), group=1)
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, track_activity), group=2)
 

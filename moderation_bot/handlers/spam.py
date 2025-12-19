@@ -1,6 +1,6 @@
 import os
 import structlog
-from telegram import Update
+from telegram import Update, Chat
 from telegram.ext import CallbackContext
 
 from .moderation import _is_user_admin
@@ -40,3 +40,37 @@ async def toggle_nobots(update: Update, context: CallbackContext) -> None:
     status_message = "✅ Anti-bot protection is now **enabled**." if new_state else "❌ Anti-bot protection is now **disabled**."
     await update.message.reply_html(status_message)
     logger.info("Anti-bot protection toggled", admin=update.effective_user.id, chat_id=update.effective_chat.id, enabled=new_state)
+
+async def clean_linked_channel_messages(update: Update, context: CallbackContext) -> None:
+    """Deletes messages from linked channels if 'cleanlinked' is enabled."""
+    if not update.message:
+        return
+
+    chat_id = update.effective_chat.id
+    
+    # Check if cleanlinked is enabled for this chat
+    if not context.chat_data.get('cleanlinked_enabled', False):
+        return
+
+    # Check if the message is from a linked channel
+    if update.message.sender_chat and update.message.sender_chat.type == Chat.CHANNEL:
+        # If the effective user is an admin, we assume they know what they are doing.
+        if update.effective_user and await _is_user_admin(update, context):
+            logger.debug("Skipping deletion: Message from linked channel sent by admin", 
+                         user_id=update.effective_user.id, chat_id=chat_id, message_id=update.message.message_id)
+            return
+
+        try:
+            await update.message.delete()
+            logger.info(
+                "Deleted message from linked channel",
+                chat_id=chat_id,
+                message_id=update.message.message_id
+            )
+        except Exception as e:
+            logger.error(
+                "Failed to delete message from linked channel",
+                error=e,
+                chat_id=chat_id,
+                message_id=update.message.message_id
+            )

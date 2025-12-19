@@ -148,5 +148,33 @@ async def announce_command(update: Update, context: CallbackContext) -> None:
         logger.error("Failed to send announcement", error=e, chat_id=target_chat_id)
         await update.message.reply_text(f"❌ Failed to send announcement. Reason: {e}")
 
+async def toggle_cleanlinked(update: Update, context: CallbackContext) -> None:
+    """Toggles the 'cleanlinked' feature or shows its status."""
+    if not await _is_user_admin(update, context):
+        await update.message.reply_text("This command can only be used by admins.")
+        return
+
+    chat_id = update.effective_chat.id
+    current_state = context.chat_data.get('cleanlinked_enabled', False)
+
+    if context.args:
+        arg = context.args[0].lower()
+        if arg in ['yes', 'on']:
+            new_state = True
+        elif arg in ['no', 'off']:
+            new_state = False
+        else:
+            await update.message.reply_text("Invalid argument. Use 'yes', 'no', 'on', or 'off'.")
+            return
+        
+        context.chat_data['cleanlinked_enabled'] = new_state
+        status_message = "✅ Deletion of linked channel messages is now **enabled**." if new_state else "❌ Deletion of linked channel messages is now **disabled**."
+        await update.message.reply_html(status_message)
+        logger.info("Cleanlinked toggled", admin=update.effective_user.id, chat_id=chat_id, enabled=new_state)
+    else:
+        status_message = "✅ Deletion of linked channel messages is currently **enabled**." if current_state else "❌ Deletion of linked channel messages is currently **disabled**."
+        await update.message.reply_html(status_message)
+
+
 
 
