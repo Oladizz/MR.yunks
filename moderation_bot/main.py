@@ -22,6 +22,8 @@ from moderation_bot.handlers.members import welcome_new_member
 from moderation_bot.handlers.help import help_command
 from moderation_bot.handlers.activity import track_activity, top_command
 from moderation_bot.handlers.spam import block_other_bots, toggle_nobots, clean_linked_channel_messages
+from moderation_bot.handlers.filters import add_filter, list_filters, stop_filter, stop_all_filters, apply_filters
+from moderation_bot.handlers.pin import get_pinned_message, pin_message, announce_pin, perma_pin, unpin_message, unpin_all_messages, toggle_antichannelpin, prevent_channel_auto_pin
 from telegram.ext import filters
 
 async def error_handler(update: object, context: CallbackContext) -> None:
@@ -84,11 +86,24 @@ def main() -> None:
     application.add_handler(CommandHandler("announce", announce_command))
     application.add_handler(CommandHandler("nobots", toggle_nobots))
     application.add_handler(CommandHandler("cleanlinked", toggle_cleanlinked))
+    application.add_handler(CommandHandler("filter", add_filter))
+    application.add_handler(CommandHandler("filters", list_filters))
+    application.add_handler(CommandHandler("stop", stop_filter))
+    application.add_handler(CommandHandler("stopall", stop_all_filters))
+    application.add_handler(CommandHandler("pinned", get_pinned_message))
+    application.add_handler(CommandHandler("pin", pin_message))
+    application.add_handler(CommandHandler("announcepin", announce_pin))
+    application.add_handler(CommandHandler("permapin", perma_pin))
+    application.add_handler(CommandHandler("unpin", unpin_message))
+    application.add_handler(CommandHandler("unpinall", unpin_all_messages))
+    application.add_handler(CommandHandler("antichannelpin", toggle_antichannelpin))
 
     # Register message handlers
     application.add_handler(MessageHandler(filters.ALL, clean_linked_channel_messages), group=0)
+    application.add_handler(MessageHandler(filters.ALL, prevent_channel_auto_pin), group=0)
     application.add_handler(MessageHandler(filters.ALL, block_other_bots), group=1)
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, track_activity), group=2)
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, apply_filters), group=3)
 
     # Register member update handler
     application.add_handler(ChatMemberHandler(welcome_new_member, ChatMemberHandler.CHAT_MEMBER))
